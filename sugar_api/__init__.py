@@ -1,0 +1,1 @@
+from . jsonapi import JSONAPIMixin

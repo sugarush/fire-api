@@ -1,0 +1,35 @@
+language: python
+
+python:
+  - 3.6
+
+services:
+  - mongodb
+
+install:
+  - pip install -r .requirements
+  - pip install coverage codecov
+  - source .venv-activate
+
+script:
+  - sleep 15 # wait for mongodb to be able to accept connections
+  - coverage run --source "${MODULE}" --module "unittest" discover --verbose "test"
+  - coverage report
+
+after_success:
+  - codecov --token "3a0d0a6d-f6cd-4a94-8540-30852d4ca64e"
+
+notifications:
+
+  email: false
+
+  slack:
+
+    rooms:
+      - sugarush:ZmgII1nbdMZf6FEhq7PgiuAG#travis-ci
+
+    template:
+      - "%{repository_name}@%{branch} commit <%{compare_url}|%{commit}> build <%{build_url}|%{result}>"
+      - "%{author}: %{commit_message}"
+
+    on_pull_requests: false
