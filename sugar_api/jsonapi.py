@@ -18,16 +18,37 @@ class JSONAPIMixin(object):
 
         route = '/{path}'.format(path=cls._table)
 
+        @bp.get(route)
+        @cls._accept
+        async def read(*args, **kargs):
+            return await cls._read(*args, **kargs)
+
         @bp.post(route)
-        @cls.content_type
-        @cls.accept
+        @cls._content_type
+        @cls._accept
         async def create(*args, **kargs):
-            return await cls.create(*args, **kargs)
+            return await cls._create(*args, **kargs)
+
+        @bp.get(route + '/<id>')
+        @cls._accept
+        async def read(*args, **kargs):
+            return await cls._read(*args, **kargs)
+
+        @bp.patch(route + '/<id>')
+        @cls._content_type
+        @cls._accept
+        async def update(*args, **kargs):
+            return await cls._update(*args, **kargs)
+
+        @bp.delete(route + '/<id>')
+        @cls._accept
+        async def delete(*args, **kargs):
+            return await cls._delete(*args, **kargs)
 
         return bp
 
     @classmethod
-    def content_type(cls, handler):
+    def _content_type(cls, handler):
         async def decorator(request, *args, **kargs):
             content_type = request.headers.get('Content-Type')
             if not content_type or not content_type == cls.__content_type__:
@@ -44,7 +65,7 @@ class JSONAPIMixin(object):
         return decorator
 
     @classmethod
-    def accept(cls, handler):
+    def _accept(cls, handler):
         async def decorator(request, *args, **kargs):
             accept = request.headers.get('Accept')
             if not accept or not accept == cls.__content_type__:
@@ -61,7 +82,7 @@ class JSONAPIMixin(object):
         return decorator
 
     @classmethod
-    async def create(cls, request):
+    async def _create(cls, request):
 
         data = None
 
@@ -111,7 +132,7 @@ class JSONAPIMixin(object):
 
             try:
 
-                model = cls.from_jsonapi(data)
+                model = cls._from_jsonapi(data)
 
             except Exception as e:
 
@@ -165,7 +186,7 @@ class JSONAPIMixin(object):
 
                 return json({ 'errors': [ error.serialize() ] }, status=401)
 
-            return json({ 'data': model.serialize(controllers=True) }, status=201)
+            return json({ 'data': model._to_jsonapi() }, status=201)
 
         else:
 
@@ -181,19 +202,201 @@ class JSONAPIMixin(object):
             return json({ 'errors': [ error.serialize() ] }, status=401)
 
     @classmethod
-    async def read(cls, request):
-        pass
+    async def _read(cls, request, id=None):
+        if id:
+
+            model = None
+
+            try:
+
+                model = await cls.find_one(id)
+
+            except Exception as e:
+
+                error = Error(
+                    title = 'Read Error',
+                    detail = str(e),
+                    status = 404
+                )
+
+                return json({ 'errors': [ error.serialize() ] }, status=404)
+
+            if not model:
+
+                error = Error(
+                    title = 'Read Error',
+                    detail = 'Model not found.',
+                    status = 404
+                )
+
+                return json({
+                    'data': None,
+                    'errors': [ error.serialize() ]
+                }, status=404)
+
+            return json({ 'data': model._to_jsonapi() }, status=200)
+
+        else:
+
+            models = [ ]
+
+            try:
+
+                async for model in cls.find(request.args):
+
+                    models.append(model)
+
+            except Exception as e:
+
+                error = Error(
+                    title = 'Read Error',
+                    detail = str(e),
+                    status = 404
+                )
+
+                return json({ 'errors': [ error.serialize() ] }, status=404)
+
+            if not models:
+
+                error = Error(
+                    title = 'Read Error',
+                    detail = 'No models found.',
+                    status = '404'
+                )
+
+                return json({
+                    'data': [ ],
+                    'errors': [ error.serialize() ]
+                }, status=404)
+
+            return json({
+                'data': list(map(lambda model: model._to_jsonapi(), models))
+            }, status=200)
 
     @classmethod
-    async def update(cls, request):
-        pass
+    async def _update(cls, request, id):
+
+        data = None
+
+        if request.json:
+
+            data = request.json.get('data')
+
+        if not data:
+
+            error = Error(
+                title = 'Update Error',
+                detail = 'No data provided.',
+                status = 400
+            )
+
+            return json({ 'errors': [ error.serialize() ] }, status=404)
+
+        _id = data.get('id')
+
+        if not id == _id:
+
+            error = Error(
+                title = 'Update Error',
+                detail = 'ID provided does not match ID in the URL.',
+                status = 400
+            )
+
+            return json({ 'errors': [ error.serialize() ] }, status=404)
+
+        attributes = data.get('attributes')
+
+        if not attributes:
+
+            error = Error(
+                title = 'Update Error',
+                detail = 'No attributes provided.',
+                status = 400
+            )
+
+            return json({ 'errors': [ error.serialize() ] }, status=404)
+
+        model = None
+
+        try:
+
+            model = await cls.find_one(id)
+
+        except Exception as e:
+
+            error = Error(
+                title = 'Update Error',
+                detail = str(e),
+                status = 400
+            )
+
+            return json({ 'errors': [ error.serialize() ] }, status=404)
+
+        try:
+
+            model.update(attributes)
+
+        except Exception as e:
+
+            error = Error(
+                title = 'Update Error',
+                detail = str(e),
+                status = 400
+            )
+
+            return json({ 'errors': [ error.serialize() ] }, status=404)
+
+        try:
+
+            await model.save()
+
+        except Exception as e:
+
+            error = Error(
+                title = 'Update Error',
+                detail = str(e),
+                status = 400
+            )
+
+            return json({ 'errors': [ error.serialize() ] }, status=404)
+
+        return json({ 'data': model._to_jsonapi() }, status=200)
 
     @classmethod
-    async def delete(cls, request):
-        pass
+    async def _delete(cls, request, id):
+
+        try:
+
+            model = await cls.find_one(id)
+
+        except Exception as e:
+
+            error = Error(
+                title = 'Delete Error',
+                detail = str(e),
+                status = 400
+            )
+
+            return json({ 'errors': [ error.serialize() ] }, status=404)
+
+        try:
+
+            await model.delete()
+
+        except Exception as e:
+
+            error = Error(
+                title = 'Delete Error',
+                detail = str(e),
+                status = 400
+            )
+
+            return json({ 'errors': [ error.serialize() ] }, status=404)
+
+        return json({ }, status=200)
 
     @classmethod
-    def from_jsonapi(cls, data):
+    def _from_jsonapi(cls, data):
         id = data.get('id')
         attributes = data.get('attributes')
 
@@ -204,11 +407,11 @@ class JSONAPIMixin(object):
 
         return model
 
-    def to_jsonapi(self):
+    def _to_jsonapi(self):
         data = { }
 
         data['type'] = self._table
         data['id'] = self.id
-        data['attributes'] = self.serialize()
+        data['attributes'] = self.serialize(controllers=True)
 
         return data
