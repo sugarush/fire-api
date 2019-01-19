@@ -6,6 +6,60 @@ from . error import Error
 
 class JSONAPIMixin(object):
 
+    __content_type__ = 'application/vnd.api+json'
+
+    @classmethod
+    def blueprint(cls, *args, **kargs):
+
+        if not len(args) > 0:
+            args = [ cls._table ]
+
+        bp = Blueprint(*args, **kargs)
+
+        route = '/{path}'.format(path=cls._table)
+
+        @bp.post(route)
+        @cls.content_type
+        @cls.accept
+        async def create(*args, **kargs):
+            return await cls.create(*args, **kargs)
+
+        return bp
+
+    @classmethod
+    def content_type(cls, handler):
+        async def decorator(request, *args, **kargs):
+            content_type = request.headers.get('Content-Type')
+            if not content_type or not content_type == cls.__content_type__:
+                error = Error(
+                    title = 'Invalid Content-Type Header',
+                    detail = 'The Content-Type header provided is of an invalid type.',
+                    links = {
+                        'about': 'http://jsonapi.org/format/#content-negotiation'
+                    },
+                    status = 415
+                )
+                return json({ 'errors': [ error.serialize() ] }, status=415)
+            return await handler(request, *args, **kargs)
+        return decorator
+
+    @classmethod
+    def accept(cls, handler):
+        async def decorator(request, *args, **kargs):
+            accept = request.headers.get('Accept')
+            if not accept or not accept == cls.__content_type__:
+                error = Error(
+                    title = 'Invalid Accept Header',
+                    detail = 'The Accept header provided is of an invalid type.',
+                    links = {
+                        'about': 'http://jsonapi.org/format/#content-negotiation'
+                    },
+                    status = 415
+                )
+                return json({ 'errors': [ error.serialize() ] }, status=415)
+            return await handler(request, *args, **kargs)
+        return decorator
+
     @classmethod
     async def create(cls, request):
 
@@ -19,7 +73,8 @@ class JSONAPIMixin(object):
 
             error = Error(
                 title = 'Create Error',
-                detail = 'No data supplied.'
+                detail = 'No data supplied.',
+                status = 401
             )
 
             return json({ 'errors': [ error.serialize() ] }, status=401)
@@ -36,7 +91,8 @@ class JSONAPIMixin(object):
 
                 error = Error(
                     title = 'Create Error',
-                    detail = message
+                    detail = message,
+                    status = 409
                 )
 
                 return json({ 'errors': [ error.serialize() ] }, status=409)
@@ -47,7 +103,8 @@ class JSONAPIMixin(object):
 
                 error = Error(
                     title = 'Create Error',
-                    detail = 'Attributes field is missing or empty.'
+                    detail = 'Attributes field is missing or empty.',
+                    status = 401
                 )
 
                 return json({ 'errors': [ error.serialize() ] }, status=401)
@@ -60,7 +117,8 @@ class JSONAPIMixin(object):
 
                 error = Error(
                     title = 'Create Error',
-                    detail = str(e)
+                    detail = str(e),
+                    status = 401
                 )
 
                 return json({ 'errors': [ error.serialize() ] }, status=401)
@@ -77,7 +135,8 @@ class JSONAPIMixin(object):
 
                     error = Error(
                         title = 'Create Error',
-                        detail = message
+                        detail = message,
+                        status = 409
                     )
 
                     return json({ 'errors': [ error.serialize() ] }, status=409)
@@ -86,7 +145,8 @@ class JSONAPIMixin(object):
 
                 error = Error(
                     title = 'Create Error',
-                    detail = str(e)
+                    detail = str(e),
+                    status = 401
                 )
 
                 return json({ 'errors': [ error.serialize() ] }, status=401)
@@ -99,7 +159,8 @@ class JSONAPIMixin(object):
 
                 error = Error(
                     title = 'Create Error',
-                    detail = str(e)
+                    detail = str(e),
+                    status = 401
                 )
 
                 return json({ 'errors': [ error.serialize() ] }, status=401)
@@ -113,7 +174,8 @@ class JSONAPIMixin(object):
                 detail = 'Invalid data type.',
                 links = {
                     'about': 'https://jsonapi.org/format/#crud-creating'
-                }
+                },
+                status = 401
             )
 
             return json({ 'errors': [ error.serialize() ] }, status=401)
@@ -129,22 +191,6 @@ class JSONAPIMixin(object):
     @classmethod
     async def delete(cls, request):
         pass
-
-    @classmethod
-    def blueprint(cls, *args, **kargs):
-
-        if not len(args) > 0:
-            args = [ cls._table ]
-
-        bp = Blueprint(*args, **kargs)
-
-        route = '/{path}'.format(path=cls._table)
-
-        @bp.post(route)
-        async def create(*args, **kargs):
-            return await cls.create(*args, **kargs)
-
-        return bp
 
     @classmethod
     def from_jsonapi(cls, data):
