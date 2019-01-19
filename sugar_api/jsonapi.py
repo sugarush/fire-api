@@ -106,13 +106,14 @@ class JSONAPIMixin(object):
 
             return json({ 'data': model.serialize(controllers=True) }, status=201)
 
-        elif isinstance(data, list):
-            pass
-
         else:
+
             error = Error(
                 title = 'Create Error',
-                detail = 'Invalid data type: must be a list of objects or an object.'
+                detail = 'Invalid data type.',
+                links = {
+                    'about': 'https://jsonapi.org/format/#crud-creating'
+                }
             )
 
             return json({ 'errors': [ error.serialize() ] }, status=401)
