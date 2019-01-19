@@ -17,7 +17,7 @@ class User(Model, JSONAPIMixin):
 
 app = Sanic()
 
-app.blueprint(User.blueprint())
+app.blueprint(User.blueprint(url_prefix='/v1'))
 
 @app.route('/')
 async def test(request):
