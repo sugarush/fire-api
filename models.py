@@ -1,4 +1,4 @@
-from sugar_odm import MongoDBModel, Model, Field
+from sugar_odm import MemoryModel, Model, Field
 from sugar_api import JSONAPIMixin
 
 
@@ -7,5 +7,5 @@ class Name(Model):
     last = Field(required=True)
 
 
-class User(MongoDBModel, JSONAPIMixin):
+class User(MemoryModel, JSONAPIMixin):
     name = Field(type=Name)
