@@ -205,10 +205,10 @@ class JSONAPIMixin(object):
             error = Error(
                 title = 'Create Error',
                 detail = str(e),
-                status = 401
+                status = 500
             )
 
-            return json({ 'errors': [ error.serialize() ] }, status=401)
+            return json({ 'errors': [ error.serialize() ] }, status=500)
 
         try:
 
@@ -219,12 +219,26 @@ class JSONAPIMixin(object):
             error = Error(
                 title = 'Create Error',
                 detail = str(e),
-                status = 401
+                status = 500
             )
 
-            return json({ 'errors': [ error.serialize() ] }, status=401)
+            return json({ 'errors': [ error.serialize() ] }, status=500)
 
-        return json({ 'data': model._to_jsonapi() }, status=201)
+        try:
+
+            result = model._to_jsonapi()
+
+        except Exception as e:
+
+            error = Error(
+                title = 'Create Error',
+                detail = str(e),
+                status = 500
+            )
+
+            return json({ 'errors': [ error.serialize() ] }, status=500)
+
+        return json({ 'data': result }, status=201)
 
     @classmethod
     async def _read(cls, request, id=None):

@@ -2,6 +2,7 @@ import json
 
 from sugar_asynctest import AsyncTestCase
 from sugar_document import Document
+from sugar_odm import MemoryModel, Field
 
 from sugar_api import JSONAPIMixin
 
@@ -10,8 +11,8 @@ def decode(response):
     return Document(json.loads(response.body.decode()))
 
 
-class Mixin(JSONAPIMixin):
-    _table = 'test'
+class Mixin(MemoryModel, JSONAPIMixin):
+    field = Field()
 
 
 class JSONAPIMixinTest(AsyncTestCase):
@@ -81,7 +82,7 @@ class JSONAPIMixinTest(AsyncTestCase):
         response = await test._create(Document({
             'json': {
                 'data': {
-                    'type': 'test'
+                    'type': 'mixins'
                 }
             }
         }))
@@ -89,3 +90,63 @@ class JSONAPIMixinTest(AsyncTestCase):
         response = decode(response)
 
         self.assertEqual(response.errors[0].detail, 'No attributes supplied.')
+
+    async def test_create_from_json_exception(self):
+
+        test = Mixin()
+
+        response = await test._create(Document({
+            'json': {
+                'data': {
+                    'type': 'mixins',
+                    'attributes': {
+                        'undefined_field': 'invalid'
+                    }
+                }
+            }
+        }))
+
+        response = decode(response)
+
+        self.assertEqual(response.errors[0].detail, 'Mixin has undefined fields: undefined_field')
+
+    async def test_create_id_already_exists(self):
+
+        test = Mixin()
+
+        await test.save()
+
+        response = await test._create(Document({
+            'json': {
+                'data': {
+                    'type': 'mixins',
+                    'id': test.id,
+                    'attributes': {
+                        'field': 'value'
+                    }
+                }
+            }
+        }))
+
+        response = decode(response)
+
+        self.assertTrue(response.errors[0].detail.endswith('already exists.'))
+
+    async def test_create_to_jsonapi(self):
+
+        test = Mixin()
+
+        response = await test._create(Document({
+            'json': {
+                'data': {
+                    'type': 'mixins',
+                    'attributes': {
+                        'field': 'value'
+                    }
+                }
+            }
+        }))
+
+        response = decode(response)
+
+        self.assertEqual(response.data.attributes.field, 'value')
