@@ -134,25 +134,6 @@ class JSONAPIMixinTest(AsyncTestCase):
 
         await Mixin.drop()
 
-    async def test_create_to_jsonapi(self):
-
-        response = await Mixin._create(Document({
-            'json': {
-                'data': {
-                    'type': 'mixins',
-                    'attributes': {
-                        'field': 'value'
-                    }
-                }
-            }
-        }))
-
-        response = decode(response)
-
-        self.assertEqual(response.data.attributes.field, 'value')
-
-        await Mixin.drop()
-
     async def test_read_by_id(self):
 
         test = Mixin()
