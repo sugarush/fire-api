@@ -12,12 +12,11 @@ install:
   - source .venv-activate
 
 script:
-  - sleep 15 # wait for mongodb to be able to accept connections
   - coverage run --source "${MODULE}" --module "unittest" discover --verbose "test"
   - coverage report
 
 after_success:
-  - codecov --token "3a0d0a6d-f6cd-4a94-8540-30852d4ca64e"
+  - codecov --token "96084111-cd10-408e-bb60-5f4596f60efd"
 
 notifications:
 
