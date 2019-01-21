@@ -100,95 +100,7 @@ class JSONAPIMixin(object):
 
             return json({ 'errors': [ error.serialize() ] }, status=401)
 
-        if isinstance(data, dict):
-
-            type = data.get('type')
-
-            if not type == cls._table:
-
-                message = 'Type {type} does not match collection type.'.format(
-                    type = type
-                )
-
-                error = Error(
-                    title = 'Create Error',
-                    detail = message,
-                    status = 409
-                )
-
-                return json({ 'errors': [ error.serialize() ] }, status=409)
-
-            attributes = data.get('attributes')
-
-            if not attributes:
-
-                error = Error(
-                    title = 'Create Error',
-                    detail = 'Attributes field is missing or empty.',
-                    status = 401
-                )
-
-                return json({ 'errors': [ error.serialize() ] }, status=401)
-
-            try:
-
-                model = cls._from_jsonapi(data)
-
-            except Exception as e:
-
-                error = Error(
-                    title = 'Create Error',
-                    detail = str(e),
-                    status = 401
-                )
-
-                return json({ 'errors': [ error.serialize() ] }, status=401)
-
-            try:
-
-                if model.id and await cls.exists(model.id):
-
-
-                    message = '{model} {id} already exists.'.format(
-                        model = cls.__name__,
-                        id = model.id
-                    )
-
-                    error = Error(
-                        title = 'Create Error',
-                        detail = message,
-                        status = 409
-                    )
-
-                    return json({ 'errors': [ error.serialize() ] }, status=409)
-
-            except Exception as e:
-
-                error = Error(
-                    title = 'Create Error',
-                    detail = str(e),
-                    status = 401
-                )
-
-                return json({ 'errors': [ error.serialize() ] }, status=401)
-
-            try:
-
-                await model.save()
-
-            except Exception as e:
-
-                error = Error(
-                    title = 'Create Error',
-                    detail = str(e),
-                    status = 401
-                )
-
-                return json({ 'errors': [ error.serialize() ] }, status=401)
-
-            return json({ 'data': model._to_jsonapi() }, status=201)
-
-        else:
+        if not isinstance(data, dict):
 
             error = Error(
                 title = 'Create Error',
@@ -201,6 +113,92 @@ class JSONAPIMixin(object):
 
             return json({ 'errors': [ error.serialize() ] }, status=401)
 
+        type = data.get('type')
+
+        if not type == cls._table:
+
+            message = 'Type {type} does not match collection type.'.format(
+                type = type
+            )
+
+            error = Error(
+                title = 'Create Error',
+                detail = message,
+                status = 409
+            )
+
+            return json({ 'errors': [ error.serialize() ] }, status=409)
+
+        attributes = data.get('attributes')
+
+        if not attributes:
+
+            error = Error(
+                title = 'Create Error',
+                detail = 'Attributes field is missing or empty.',
+                status = 401
+            )
+
+            return json({ 'errors': [ error.serialize() ] }, status=401)
+
+        try:
+
+            model = cls._from_jsonapi(data)
+
+        except Exception as e:
+
+            error = Error(
+                title = 'Create Error',
+                detail = str(e),
+                status = 401
+            )
+
+            return json({ 'errors': [ error.serialize() ] }, status=401)
+
+        try:
+
+            if model.id and await cls.exists(model.id):
+
+
+                message = '{model} {id} already exists.'.format(
+                    model = cls.__name__,
+                    id = model.id
+                )
+
+                error = Error(
+                    title = 'Create Error',
+                    detail = message,
+                    status = 409
+                )
+
+                return json({ 'errors': [ error.serialize() ] }, status=409)
+
+        except Exception as e:
+
+            error = Error(
+                title = 'Create Error',
+                detail = str(e),
+                status = 401
+            )
+
+            return json({ 'errors': [ error.serialize() ] }, status=401)
+
+        try:
+
+            await model.save()
+
+        except Exception as e:
+
+            error = Error(
+                title = 'Create Error',
+                detail = str(e),
+                status = 401
+            )
+
+            return json({ 'errors': [ error.serialize() ] }, status=401)
+
+        return json({ 'data': model._to_jsonapi() }, status=201)
+
     @classmethod
     async def _read(cls, request, id=None):
         if id:
@@ -209,7 +207,7 @@ class JSONAPIMixin(object):
 
             try:
 
-                model = await cls.find_one(id)
+                model = await cls.find_by_id(id)
 
             except Exception as e:
 
@@ -292,6 +290,31 @@ class JSONAPIMixin(object):
 
             return json({ 'errors': [ error.serialize() ] }, status=404)
 
+        if not isinstance(data, dict):
+
+            error = Error(
+                title = 'Update Error',
+                detail = 'Invalid data attribute.',
+                links = {
+                    'about': 'https://jsonapi.org/format/#crud-creating'
+                },
+                status = 401
+            )
+
+            return json({ 'errors': [ error.serialize() ] }, status=401)
+
+        type = data.get('type')
+
+        if not type == cls._table:
+
+            error = Error(
+                title = 'Update Error',
+                detail = 'Type in payload does not match collection type.',
+                status = 409
+            )
+
+            return json({ 'errors': [ error.serialize() ] }, status=409)
+
         _id = data.get('id')
 
         if not id == _id:
@@ -320,7 +343,7 @@ class JSONAPIMixin(object):
 
         try:
 
-            model = await cls.find_one(id)
+            model = await cls.find_by_id(id)
 
         except Exception as e:
 
@@ -367,7 +390,7 @@ class JSONAPIMixin(object):
 
         try:
 
-            model = await cls.find_one(id)
+            model = await cls.find_by_id(id)
 
         except Exception as e:
 
