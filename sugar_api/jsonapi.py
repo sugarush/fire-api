@@ -250,7 +250,7 @@ class JSONAPIMixin(object):
 
                 error = Error(
                     title = 'Read Error',
-                    detail = 'Model not found.',
+                    detail = 'No data found.',
                     status = 404
                 )
 
@@ -276,17 +276,17 @@ class JSONAPIMixin(object):
                 error = Error(
                     title = 'Read Error',
                     detail = str(e),
-                    status = 404
+                    status = 500
                 )
 
-                return json({ 'errors': [ error.serialize() ] }, status=404)
+                return json({ 'errors': [ error.serialize() ] }, status=500)
 
             if not models:
 
                 error = Error(
                     title = 'Read Error',
-                    detail = 'No models found.',
-                    status = '404'
+                    detail = 'No data found.',
+                    status = 404
                 )
 
                 return json({
@@ -299,7 +299,7 @@ class JSONAPIMixin(object):
             }, status=200)
 
     @classmethod
-    async def _update(cls, request, id):
+    async def _update(cls, request, id=None):
 
         data = None
 
@@ -312,10 +312,10 @@ class JSONAPIMixin(object):
             error = Error(
                 title = 'Update Error',
                 detail = 'No data provided.',
-                status = 400
+                status = 403
             )
 
-            return json({ 'errors': [ error.serialize() ] }, status=404)
+            return json({ 'errors': [ error.serialize() ] }, status=403)
 
         if not isinstance(data, dict):
 
@@ -325,34 +325,54 @@ class JSONAPIMixin(object):
                 links = {
                     'about': 'https://jsonapi.org/format/#crud-creating'
                 },
-                status = 401
+                status = 403
             )
 
-            return json({ 'errors': [ error.serialize() ] }, status=401)
+            return json({ 'errors': [ error.serialize() ] }, status=403)
 
         type = data.get('type')
+
+        if not type:
+
+            error = Error(
+                title = 'Update Error',
+                detail = 'Type is missing.',
+                status = 403
+            )
+
+            return json({ 'errors': [ error.serialize() ] }, status=403)
 
         if not type == cls._table:
 
             error = Error(
                 title = 'Update Error',
                 detail = 'Type in payload does not match collection type.',
-                status = 409
+                status = 403
             )
 
-            return json({ 'errors': [ error.serialize() ] }, status=409)
+            return json({ 'errors': [ error.serialize() ] }, status=403)
 
         _id = data.get('id')
+
+        if not _id:
+
+            error = Error(
+                title = 'Update Error',
+                detail = 'ID is missing.',
+                status = 403
+            )
+
+            return json({ 'errors': [ error.serialize() ] }, status=403)
 
         if not id == _id:
 
             error = Error(
                 title = 'Update Error',
                 detail = 'ID provided does not match ID in the URL.',
-                status = 400
+                status = 403
             )
 
-            return json({ 'errors': [ error.serialize() ] }, status=404)
+            return json({ 'errors': [ error.serialize() ] }, status=403)
 
         attributes = data.get('attributes')
 
@@ -361,10 +381,10 @@ class JSONAPIMixin(object):
             error = Error(
                 title = 'Update Error',
                 detail = 'No attributes provided.',
-                status = 400
+                status = 403
             )
 
-            return json({ 'errors': [ error.serialize() ] }, status=404)
+            return json({ 'errors': [ error.serialize() ] }, status=403)
 
         model = None
 
@@ -377,10 +397,10 @@ class JSONAPIMixin(object):
             error = Error(
                 title = 'Update Error',
                 detail = str(e),
-                status = 400
+                status = 500
             )
 
-            return json({ 'errors': [ error.serialize() ] }, status=404)
+            return json({ 'errors': [ error.serialize() ] }, status=500)
 
         try:
 
@@ -391,10 +411,10 @@ class JSONAPIMixin(object):
             error = Error(
                 title = 'Update Error',
                 detail = str(e),
-                status = 400
+                status = 500
             )
 
-            return json({ 'errors': [ error.serialize() ] }, status=404)
+            return json({ 'errors': [ error.serialize() ] }, status=500)
 
         try:
 
@@ -405,10 +425,10 @@ class JSONAPIMixin(object):
             error = Error(
                 title = 'Update Error',
                 detail = str(e),
-                status = 400
+                status = 500
             )
 
-            return json({ 'errors': [ error.serialize() ] }, status=404)
+            return json({ 'errors': [ error.serialize() ] }, status=500)
 
         return json({ 'data': model._to_jsonapi() }, status=200)
 
@@ -424,10 +444,10 @@ class JSONAPIMixin(object):
             error = Error(
                 title = 'Delete Error',
                 detail = str(e),
-                status = 400
+                status = 500
             )
 
-            return json({ 'errors': [ error.serialize() ] }, status=404)
+            return json({ 'errors': [ error.serialize() ] }, status=500)
 
         try:
 
@@ -438,9 +458,9 @@ class JSONAPIMixin(object):
             error = Error(
                 title = 'Delete Error',
                 detail = str(e),
-                status = 400
+                status = 500
             )
 
-            return json({ 'errors': [ error.serialize() ] }, status=404)
+            return json({ 'errors': [ error.serialize() ] }, status=500)
 
         return json({ }, status=200)

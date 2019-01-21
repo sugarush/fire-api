@@ -148,6 +148,14 @@ class JSONAPIMixinTest(AsyncTestCase):
 
         await Mixin.drop()
 
+    async def test_read_by_id_no_data_found(self):
+
+        response = await Mixin._read(None, 'non-existent')
+
+        response = decode(response)
+
+        self.assertEqual(response.errors[0].detail, 'No data found.')
+
     async def test_read_multiple(self):
 
         await Mixin.add([
@@ -165,3 +173,121 @@ class JSONAPIMixinTest(AsyncTestCase):
         self.assertEqual(len(response.data), 3)
 
         await Mixin.drop()
+
+    async def test_read_multiple_no_data_found(self):
+
+        response = await Mixin._read(Document({
+            'args': ''
+        }))
+
+        response = decode(response)
+
+        self.assertEqual(response.errors[0].detail, 'No data found.')
+
+    async def test_update_data_missing(self):
+
+        response = await Mixin._update(Document({
+            'json': { }
+        }))
+
+        response = decode(response)
+
+        self.assertEqual(response.errors[0].detail, 'No data provided.')
+
+    async def test_update_data_not_a_dict(self):
+
+        response = await Mixin._update(Document({
+            'json': {
+                'data': 'invalid'
+            }
+        }))
+
+        response = decode(response)
+
+        self.assertEqual(response.errors[0].detail, 'Invalid data attribute.')
+
+    async def test_update_type_missing(self):
+
+        response = await Mixin._update(Document({
+            'json': {
+                'data': {
+                    'non-existent': 'value'
+                }
+            }
+        }))
+
+        response = decode(response)
+
+        self.assertEqual(response.errors[0].detail, 'Type is missing.')
+
+    async def test_update_type_mismatch(self):
+
+        response = await Mixin._update(Document({
+            'json': {
+                'data': {
+                    'type': 'invalid'
+                }
+            }
+        }))
+
+        response = decode(response)
+
+        self.assertEqual(response.errors[0].detail, 'Type in payload does not match collection type.')
+
+    async def test_update_id_missing(self):
+
+        response = await Mixin._update(Document({
+            'json': {
+                'data': {
+                    'type': 'mixins'
+                }
+            }
+        }))
+
+        response = decode(response)
+
+        self.assertEqual(response.errors[0].detail, 'ID is missing.')
+
+    async def test_update_id_mismatch(self):
+
+        response = await Mixin._update(Document({
+            'json': {
+                'data': {
+                    'type': 'mixins',
+                    'id': 'alpha'
+                }
+            }
+        }), 'beta')
+
+        response = decode(response)
+
+        self.assertEqual(response.errors[0].detail, 'ID provided does not match ID in the URL.')
+
+    async def test_update_attributes_missing(self):
+
+        response = await Mixin._update(Document({
+            'json': {
+                'data': {
+                    'type': 'mixins',
+                    'id': 'alpha'
+                }
+            }
+        }), 'alpha')
+
+        response = decode(response)
+
+        self.assertEqual(response.errors[0].detail, 'No attributes provided.')
+
+    async def test_delete_id_missing(self):
+
+        test = Mixin()
+
+        await test.save()
+
+        response = await Mixin._delete(Document({
+            'json': { }
+        }), test.id)
+
+        response = decode(response)
+
+        self.assertDictEqual(response, { })
