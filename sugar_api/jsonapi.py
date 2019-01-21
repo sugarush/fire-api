@@ -255,10 +255,10 @@ class JSONAPIMixin(object):
                 error = Error(
                     title = 'Read Error',
                     detail = str(e),
-                    status = 404
+                    status = 500
                 )
 
-                return json({ 'errors': [ error.serialize() ] }, status=404)
+                return json({ 'errors': [ error.serialize() ] }, status=500)
 
             if not model:
 
@@ -273,7 +273,21 @@ class JSONAPIMixin(object):
                     'errors': [ error.serialize() ]
                 }, status=404)
 
-            return json({ 'data': model._to_jsonapi() }, status=200)
+            try:
+
+                result = model._to_jsonapi()
+
+            except Exception as e:
+
+                error = Error(
+                    title = 'Read Error',
+                    detail = str(e),
+                    status = 500
+                )
+
+                return json({ 'errors': [ error.serialize() ] }, status=500)
+
+            return json({ 'data': result }, status=200)
 
         else:
 

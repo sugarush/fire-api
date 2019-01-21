@@ -19,9 +19,7 @@ class JSONAPIMixinTest(AsyncTestCase):
 
     async def test_create_data_missing(self):
 
-        test = Mixin()
-
-        response = await test._create(Document({
+        response = await Mixin._create(Document({
             'json': { }
         }))
 
@@ -29,11 +27,11 @@ class JSONAPIMixinTest(AsyncTestCase):
 
         self.assertEqual(response.errors[0].detail, 'No data supplied.')
 
+        await Mixin.drop()
+
     async def test_create_data_not_a_dict(self):
 
-        test = Mixin()
-
-        response = await test._create(Document({
+        response = await Mixin._create(Document({
             'json': {
                 'data': 'invalid'
             }
@@ -43,11 +41,11 @@ class JSONAPIMixinTest(AsyncTestCase):
 
         self.assertEqual(response.errors[0].detail, 'Data is not a JSON object.')
 
+        await Mixin.drop()
+
     async def test_create_type_missing(self):
 
-        test = Mixin()
-
-        response = await test._create(Document({
+        response = await Mixin._create(Document({
             'json': {
                 'data': {
                     'test': 'ing'
@@ -59,11 +57,11 @@ class JSONAPIMixinTest(AsyncTestCase):
 
         self.assertEqual(response.errors[0].detail, 'Type is missing.')
 
+        await Mixin.drop()
+
     async def test_create_type_mismatch(self):
 
-        test = Mixin()
-
-        response = await test._create(Document({
+        response = await Mixin._create(Document({
             'json': {
                 'data': {
                     'type': 'invalid'
@@ -75,11 +73,11 @@ class JSONAPIMixinTest(AsyncTestCase):
 
         self.assertEqual(response.errors[0].detail, 'Provided type does not match resource type.')
 
+        await Mixin.drop()
+
     async def test_create_attributes_missing(self):
 
-        test = Mixin()
-
-        response = await test._create(Document({
+        response = await Mixin._create(Document({
             'json': {
                 'data': {
                     'type': 'mixins'
@@ -91,11 +89,11 @@ class JSONAPIMixinTest(AsyncTestCase):
 
         self.assertEqual(response.errors[0].detail, 'No attributes supplied.')
 
+        await Mixin.drop()
+
     async def test_create_from_json_exception(self):
 
-        test = Mixin()
-
-        response = await test._create(Document({
+        response = await Mixin._create(Document({
             'json': {
                 'data': {
                     'type': 'mixins',
@@ -110,13 +108,15 @@ class JSONAPIMixinTest(AsyncTestCase):
 
         self.assertEqual(response.errors[0].detail, 'Mixin has undefined fields: undefined_field')
 
+        await Mixin.drop()
+
     async def test_create_id_already_exists(self):
 
         test = Mixin()
 
         await test.save()
 
-        response = await test._create(Document({
+        response = await Mixin._create(Document({
             'json': {
                 'data': {
                     'type': 'mixins',
@@ -132,11 +132,11 @@ class JSONAPIMixinTest(AsyncTestCase):
 
         self.assertTrue(response.errors[0].detail.endswith('already exists.'))
 
+        await Mixin.drop()
+
     async def test_create_to_jsonapi(self):
 
-        test = Mixin()
-
-        response = await test._create(Document({
+        response = await Mixin._create(Document({
             'json': {
                 'data': {
                     'type': 'mixins',
@@ -150,3 +150,35 @@ class JSONAPIMixinTest(AsyncTestCase):
         response = decode(response)
 
         self.assertEqual(response.data.attributes.field, 'value')
+
+        await Mixin.drop()
+
+    async def test_read_by_id(self):
+
+        test = Mixin()
+
+        await test.save()
+
+        response = await Mixin._read(None, test.id)
+
+        response = decode(response)
+
+        self.assertEqual(response.data.id, test.id)
+
+        await Mixin.drop()
+
+    async def test_read_multiple(self):
+
+        await Mixin.add([
+            { },
+            { },
+            { }
+        ])
+
+        response = await Mixin._read(Document({
+            'args': ''
+        }))
+
+        response = decode(response)
+
+        self.assertEqual(len(response.data), 3)
