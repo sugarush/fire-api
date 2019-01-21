@@ -1,4 +1,5 @@
+git+https://github.com/sugarush/sugar-document@master#egg=sugar-document
+git+https://github.com/sugarush/sugar-asynctest@master#egg=sugar-asynctest
+git+https://github.com/sugarush/sugar-odm@master#egg=sugar-odm
+
 sanic
-https://github.com/sugarush/sugar-document/tarball/master#egg=sugar-document
-https://github.com/sugarush/sugar-asynctest/tarball/master#egg=sugar-asynctest
-https://github.com/sugarush/sugar-odm/tarball/master#egg=sugar-odm
