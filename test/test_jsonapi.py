@@ -163,3 +163,5 @@ class JSONAPIMixinTest(AsyncTestCase):
         response = decode(response)
 
         self.assertEqual(len(response.data), 3)
+
+        await Mixin.drop()

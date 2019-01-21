@@ -263,9 +263,9 @@ class JSONAPIMixin(object):
 
         else:
 
-            models = [ ]
-
             try:
+
+                models = [ ]
 
                 async for model in cls.find(request.args):
 
