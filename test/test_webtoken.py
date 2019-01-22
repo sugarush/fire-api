@@ -37,7 +37,7 @@ class WebTokenTest(AsyncTestCase):
 
     async def test_no_username(self):
 
-        WebToken.blueprint('test', model=MemoryModel, secret='secret')
+        WebToken.blueprint(secret='secret')
 
         response = await WebToken._post(Document({
             'json': {
@@ -49,11 +49,11 @@ class WebTokenTest(AsyncTestCase):
 
         response = decode(response)
 
-        self.assertEqual(response.errors[0].detail, 'Field missing: username.')
+        self.assertEqual(response.errors[0].detail, 'Missing username.')
 
     async def test_no_password(self):
 
-        WebToken.blueprint('test', model=MemoryModel, secret='secret')
+        WebToken.blueprint(secret='secret')
 
         response = await WebToken._post(Document({
             'json': {
@@ -65,46 +65,7 @@ class WebTokenTest(AsyncTestCase):
 
         response = decode(response)
 
-        self.assertEqual(response.errors[0].detail, 'Field missing: password.')
-
-    async def test_model_not_found(self):
-
-        class Model(MemoryModel):
-            username = Field()
-            password = Field()
-
-            @classmethod
-            async def find_one(cls, query):
-                for id in cls.db:
-                    data = cls.db[id].copy()
-                    del data['id']
-                    if data == query:
-                        return cls(cls.db[id])
-                return None
-
-        await Model.add({
-            'username': 'test',
-            'password': 'ing'
-        })
-
-        WebToken.blueprint('test',
-            model = Model,
-            secret = 'secret',
-            password_algorithm = lambda password: password
-        )
-
-        response = await WebToken._post(Document({
-            'json': {
-                'data': {
-                    'username': 'test',
-                    'password': 'invalid'
-                }
-            }
-        }))
-
-        response = decode(response)
-
-        self.assertEqual(response.errors[0].detail, 'Incorrect username or password.')
+        self.assertEqual(response.errors[0].detail, 'Missing password.')
 
     async def test_web_token(self):
 
@@ -121,18 +82,25 @@ class WebTokenTest(AsyncTestCase):
                         return cls(cls.db[id])
                 return None
 
+        class Authentication(WebToken):
+
+            @classmethod
+            async def payload(cls, username, password):
+                user = await Model.find_one({
+                    'username': username,
+                    'password': password
+                })
+
+                return user.serialize()
+
         await Model.add({
             'username': 'test',
             'password': 'ing'
         })
 
-        WebToken.blueprint('test',
-            model = Model,
-            secret = 'secret',
-            password_algorithm = lambda password: password
-        )
+        Authentication.blueprint(secret='secret')
 
-        response = await WebToken._post(Document({
+        response = await Authentication._post(Document({
             'json': {
                 'data': {
                     'username': 'test',

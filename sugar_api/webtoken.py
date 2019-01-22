@@ -9,20 +9,14 @@ from sugar_api import Error
 
 class WebToken(object):
 
-    __content_type__ = 'application/json'
+    __content_type__ = 'application/vnd.api+json'
+
+    @classmethod
+    async def payload(cls, username, password):
+        raise NotImplementedError('WebToken.payload not implemented.')
 
     @classmethod
     def blueprint(cls, *args, **kargs):
-
-        cls.Model = kargs.get('model')
-
-        if not cls.Model:
-            raise Exception('Model not provided.')
-
-        if not issubclass(cls.Model, Model):
-            raise Exception('Model is not of the proper type.')
-
-        del kargs['model']
 
         cls.secret = kargs.get('secret')
 
@@ -36,23 +30,6 @@ class WebToken(object):
 
         if 'url' in kargs:
             del kargs['url']
-
-        cls.username_field = kargs.get('username_field', 'username')
-
-        if 'username_field' in kargs:
-            del kargs['username_field']
-
-        cls.password_field = kargs.get('password_field', 'password')
-
-        if 'password_field' in kargs:
-            del kargs['password_field']
-
-        if kargs.get('password_algorithm'):
-            cls.password_algorithm = kargs['password_algorithm']
-            del kargs['password_algorithm']
-        else:
-            cls.password_algorithm = lambda password: \
-                hashlib.sha512(password.encode('utf-8')).hexdigest()
 
         cls.token_algorithm = kargs.get('token_algorithm', 'HS256')
 
@@ -129,11 +106,12 @@ class WebToken(object):
 
             return json({ 'errors': [ error.serialize() ] }, status=403)
 
-        username = data.get(cls.username_field)
+        username = data.get('username')
 
         if not username:
-            message = 'Field missing: {username}.'.format(
-                username = cls.username_field
+
+            message = 'Missing username.'.format(
+                username = username
             )
 
             error = Error(
@@ -147,8 +125,9 @@ class WebToken(object):
         password = data.get('password')
 
         if not password:
-            message = 'Field missing: {password}.'.format(
-                password = cls.password_field
+
+            message = 'Missing password.'.format(
+                password = password
             )
 
             error = Error(
@@ -159,23 +138,20 @@ class WebToken(object):
 
             return json({ 'errors': [ error.serialize() ] }, status=403)
 
-        password = cls.password_algorithm(password)
+        try:
 
-        model = await cls.Model.find_one({
-            cls.username_field: username,
-            cls.password_field: password
-        })
+            payload = await cls.payload(username, password)
 
-        if not model:
+        except Exception as e:
 
             error = Error(
                 title = 'Create Token Error',
-                detail = 'Incorrect username or password.',
+                detail = str(e),
                 status = 403
             )
 
             return json({ 'errors': [ error.serialize() ] }, status=403)
 
-        token = jwt.encode(model.serialize(computed=True, controllers=True), cls.secret, algorithm=cls.token_algorithm)
+        token = jwt.encode(payload, cls.secret, algorithm=cls.token_algorithm)
 
         return json({ 'data': { 'token': token } }, 200)
