@@ -420,6 +420,16 @@ class JSONAPIMixin(object):
 
             return json({ 'errors': [ error.serialize() ] }, status=500)
 
+        if not model.id == id:
+
+            error = Error(
+                title = 'Update Error',
+                detail = 'The Model\'s ID does not match the ID in the URL.',
+                status = 403
+            )
+
+            return json({ 'errors': [ error.serialize() ] }, status=403)
+
         try:
 
             await model.save()
