@@ -19,7 +19,13 @@ class JSONAPIMixinTest(AsyncTestCase):
 
     async def test_create_data_missing(self):
 
-        response = await Mixin._create(Document({
+        #response = await Mixin._create(Document({
+        #    'json': { }
+        #}))
+
+        decorator = Mixin._check_create(None)
+
+        response = await decorator(Document({
             'json': { }
         }))
 
@@ -31,7 +37,15 @@ class JSONAPIMixinTest(AsyncTestCase):
 
     async def test_create_data_not_a_dict(self):
 
-        response = await Mixin._create(Document({
+        #response = await Mixin._create(Document({
+        #    'json': {
+        #        'data': 'invalid'
+        #    }
+        #}))
+
+        decorator = Mixin._check_create(None)
+
+        response = await decorator(Document({
             'json': {
                 'data': 'invalid'
             }
@@ -45,7 +59,17 @@ class JSONAPIMixinTest(AsyncTestCase):
 
     async def test_create_type_missing(self):
 
-        response = await Mixin._create(Document({
+        #response = await Mixin._create(Document({
+        #    'json': {
+        #        'data': {
+        #            'test': 'ing'
+        #        }
+        #    }
+        #}))
+
+        decorator = Mixin._check_create(None)
+
+        response = await decorator(Document({
             'json': {
                 'data': {
                     'test': 'ing'
@@ -61,7 +85,17 @@ class JSONAPIMixinTest(AsyncTestCase):
 
     async def test_create_type_mismatch(self):
 
-        response = await Mixin._create(Document({
+        #response = await Mixin._create(Document({
+        #    'json': {
+        #        'data': {
+        #            'type': 'invalid'
+        #        }
+        #    }
+        #}))
+
+        decorator = Mixin._check_create(None)
+
+        response = await decorator(Document({
             'json': {
                 'data': {
                     'type': 'invalid'
@@ -77,7 +111,17 @@ class JSONAPIMixinTest(AsyncTestCase):
 
     async def test_create_attributes_missing(self):
 
-        response = await Mixin._create(Document({
+        #response = await Mixin._create(Document({
+        #    'json': {
+        #        'data': {
+        #            'type': 'mixins'
+        #        }
+        #    }
+        #}))
+
+        decorator = Mixin._check_create(None)
+
+        response = await decorator(Document({
             'json': {
                 'data': {
                     'type': 'mixins'
@@ -186,7 +230,13 @@ class JSONAPIMixinTest(AsyncTestCase):
 
     async def test_update_data_missing(self):
 
-        response = await Mixin._update(Document({
+        #response = await Mixin._update(Document({
+        #    'json': { }
+        #}))
+
+        decorator = Mixin._check_update(None)
+
+        response = await decorator(Document({
             'json': { }
         }))
 
@@ -196,7 +246,15 @@ class JSONAPIMixinTest(AsyncTestCase):
 
     async def test_update_data_not_a_dict(self):
 
-        response = await Mixin._update(Document({
+        #response = await Mixin._update(Document({
+        #    'json': {
+        #        'data': 'invalid'
+        #    }
+        #}))
+
+        decorator = Mixin._check_update(None)
+
+        response = await decorator(Document({
             'json': {
                 'data': 'invalid'
             }
@@ -208,7 +266,17 @@ class JSONAPIMixinTest(AsyncTestCase):
 
     async def test_update_type_missing(self):
 
-        response = await Mixin._update(Document({
+        #response = await Mixin._update(Document({
+        #    'json': {
+        #        'data': {
+        #            'non-existent': 'value'
+        #        }
+        #    }
+        #}))
+
+        decorator = Mixin._check_update(None)
+
+        response = await decorator(Document({
             'json': {
                 'data': {
                     'non-existent': 'value'
@@ -222,7 +290,17 @@ class JSONAPIMixinTest(AsyncTestCase):
 
     async def test_update_type_mismatch(self):
 
-        response = await Mixin._update(Document({
+        #response = await Mixin._update(Document({
+        #    'json': {
+        #        'data': {
+        #            'type': 'invalid'
+        #        }
+        #    }
+        #}))
+
+        decorator = Mixin._check_update(None)
+
+        response = await decorator(Document({
             'json': {
                 'data': {
                     'type': 'invalid'
@@ -236,7 +314,17 @@ class JSONAPIMixinTest(AsyncTestCase):
 
     async def test_update_id_missing(self):
 
-        response = await Mixin._update(Document({
+        #response = await Mixin._update(Document({
+        #    'json': {
+        #        'data': {
+        #            'type': 'mixins'
+        #        }
+        #    }
+        #}))
+
+        decorator = Mixin._check_update(None)
+
+        response = await decorator(Document({
             'json': {
                 'data': {
                     'type': 'mixins'
@@ -250,7 +338,18 @@ class JSONAPIMixinTest(AsyncTestCase):
 
     async def test_update_id_mismatch(self):
 
-        response = await Mixin._update(Document({
+        #response = await Mixin._update(Document({
+        #    'json': {
+        #        'data': {
+        #            'type': 'mixins',
+        #            'id': 'alpha'
+        #        }
+        #    }
+        #}), 'beta')
+
+        decorator = Mixin._check_update(None)
+
+        response = await decorator(Document({
             'json': {
                 'data': {
                     'type': 'mixins',
@@ -265,7 +364,18 @@ class JSONAPIMixinTest(AsyncTestCase):
 
     async def test_update_attributes_missing(self):
 
-        response = await Mixin._update(Document({
+        #response = await Mixin._update(Document({
+        #    'json': {
+        #        'data': {
+        #            'type': 'mixins',
+        #            'id': 'alpha'
+        #        }
+        #    }
+        #}), 'alpha')
+
+        decorator = Mixin._check_update(None)
+
+        response = await decorator(Document({
             'json': {
                 'data': {
                     'type': 'mixins',

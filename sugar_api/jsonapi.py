@@ -3,10 +3,13 @@ from sanic.response import json
 
 from . error import Error
 from . webtoken import WebToken, webtoken
-from . decorator import content_type, accept
+from . header import content_type, accept
+from . scope import scope
 
 
 class JSONAPIMixin(object):
+
+    __scope__ = None
 
     def _to_jsonapi(self):
         data = { }
@@ -42,102 +45,214 @@ class JSONAPIMixin(object):
         @bp.get(url)
         @accept
         @webtoken
+        @scope('read_all', cls.__scope__)
         async def read(*args, **kargs):
             return await cls._read(*args, **kargs)
 
         @bp.post(url)
         @content_type
         @accept
+        @cls._check_create
         @webtoken
+        @scope('create', cls.__scope__)
         async def create(*args, **kargs):
             return await cls._create(*args, **kargs)
 
         @bp.get(url + '/<id>')
         @accept
         @webtoken
+        @scope('read', cls.__scope__)
         async def read(*args, **kargs):
             return await cls._read(*args, **kargs)
 
         @bp.patch(url + '/<id>')
         @content_type
         @accept
+        @cls._check_update
         @webtoken
+        @scope('update', cls.__scope__)
         async def update(*args, **kargs):
             return await cls._update(*args, **kargs)
 
         @bp.delete(url + '/<id>')
         @accept
         @webtoken
+        @scope('delete', cls.__scope__)
         async def delete(*args, **kargs):
             return await cls._delete(*args, **kargs)
 
         return bp
 
     @classmethod
+    def _check_create(cls, handler):
+        async def decorator(request, *args, **kargs):
+            data = None
+
+            if request.json:
+
+                data = request.json.get('data')
+
+            if not data:
+
+                error = Error(
+                    title = 'Create Error',
+                    detail = 'No data supplied.',
+                    status = 403
+                )
+
+                return json({ 'errors': [ error.serialize() ] }, status=403)
+
+            if not isinstance(data, dict):
+
+                error = Error(
+                    title = 'Create Error',
+                    detail = 'Data is not a JSON object.',
+                    links = {
+                        'about': 'https://jsonapi.org/format/#crud-creating'
+                    },
+                    status = 403
+                )
+
+                return json({ 'errors': [ error.serialize() ] }, status=403)
+
+            type = data.get('type')
+
+            if not type:
+
+                error = Error(
+                    title = 'Create Error',
+                    detail = 'Type is missing.',
+                    status = 403
+                )
+
+                return json({ 'errors': [ error.serialize() ] }, status=403)
+
+            if not type == cls._table:
+
+                error = Error(
+                    title = 'Create Error',
+                    detail = 'Provided type does not match resource type.',
+                    status = 403
+                )
+
+                return json({ 'errors': [ error.serialize() ] }, status=403)
+
+            attributes = data.get('attributes')
+
+            if not attributes:
+
+                error = Error(
+                    title = 'Create Error',
+                    detail = 'No attributes supplied.',
+                    status = 403
+                )
+
+                return json({ 'errors': [ error.serialize() ] }, status=403)
+
+            return await handler(request, *args, **kargs)
+
+        return decorator
+
+    @classmethod
+    def _check_update(cls, handler):
+        async def decorator(request, id=None, *args, **kargs):
+
+            data = None
+
+            if request.json:
+
+                data = request.json.get('data')
+
+            if not data:
+
+                error = Error(
+                    title = 'Update Error',
+                    detail = 'No data provided.',
+                    status = 403
+                )
+
+                return json({ 'errors': [ error.serialize() ] }, status=403)
+
+            if not isinstance(data, dict):
+
+                error = Error(
+                    title = 'Update Error',
+                    detail = 'Invalid data attribute.',
+                    links = {
+                        'about': 'https://jsonapi.org/format/#crud-creating'
+                    },
+                    status = 403
+                )
+
+                return json({ 'errors': [ error.serialize() ] }, status=403)
+
+            type = data.get('type')
+
+            if not type:
+
+                error = Error(
+                    title = 'Update Error',
+                    detail = 'Type is missing.',
+                    status = 403
+                )
+
+                return json({ 'errors': [ error.serialize() ] }, status=403)
+
+            if not type == cls._table:
+
+                error = Error(
+                    title = 'Update Error',
+                    detail = 'Type in payload does not match collection type.',
+                    status = 403
+                )
+
+                return json({ 'errors': [ error.serialize() ] }, status=403)
+
+            _id = data.get('id')
+
+            if not _id:
+
+                error = Error(
+                    title = 'Update Error',
+                    detail = 'ID is missing.',
+                    status = 403
+                )
+
+                return json({ 'errors': [ error.serialize() ] }, status=403)
+
+            if not id == _id:
+
+                error = Error(
+                    title = 'Update Error',
+                    detail = 'ID provided does not match ID in the URL.',
+                    status = 403
+                )
+
+                return json({ 'errors': [ error.serialize() ] }, status=403)
+
+            attributes = data.get('attributes')
+
+            if not attributes:
+
+                error = Error(
+                    title = 'Update Error',
+                    detail = 'No attributes provided.',
+                    status = 403
+                )
+
+                return json({ 'errors': [ error.serialize() ] }, status=403)
+
+            return await handler(request, id, *args, **kargs)
+
+        return decorator
+
+    @classmethod
     async def _create(cls, request, token=None):
 
-        data = None
+        # XXX: The request has already been verified
+        # XXX: in the decorator cls._check_create.
 
-        if request.json:
-
-            data = request.json.get('data')
-
-        if not data:
-
-            error = Error(
-                title = 'Create Error',
-                detail = 'No data supplied.',
-                status = 403
-            )
-
-            return json({ 'errors': [ error.serialize() ] }, status=403)
-
-        if not isinstance(data, dict):
-
-            error = Error(
-                title = 'Create Error',
-                detail = 'Data is not a JSON object.',
-                links = {
-                    'about': 'https://jsonapi.org/format/#crud-creating'
-                },
-                status = 403
-            )
-
-            return json({ 'errors': [ error.serialize() ] }, status=403)
-
-        type = data.get('type')
-
-        if not type:
-
-            error = Error(
-                title = 'Create Error',
-                detail = 'Type is missing.',
-                status = 403
-            )
-
-            return json({ 'errors': [ error.serialize() ] }, status=403)
-
-        if not type == cls._table:
-
-            error = Error(
-                title = 'Create Error',
-                detail = 'Provided type does not match resource type.',
-                status = 403
-            )
-
-            return json({ 'errors': [ error.serialize() ] }, status=403)
-
-        attributes = data.get('attributes')
-
-        if not attributes:
-
-            error = Error(
-                title = 'Create Error',
-                detail = 'No attributes supplied.',
-                status = 403
-            )
-
-            return json({ 'errors': [ error.serialize() ] }, status=403)
+        data = request.json.get('data')
 
         try:
 
@@ -200,8 +315,6 @@ class JSONAPIMixin(object):
     @classmethod
     async def _read(cls, request, id=None, token=None):
         if id:
-
-            model = None
 
             try:
 
@@ -272,92 +385,12 @@ class JSONAPIMixin(object):
     @classmethod
     async def _update(cls, request, id=None, token=None):
 
-        data = None
+        # XXX: The request has already been verified
+        # XXX: in the decorator cls._check_update.
 
-        if request.json:
-
-            data = request.json.get('data')
-
-        if not data:
-
-            error = Error(
-                title = 'Update Error',
-                detail = 'No data provided.',
-                status = 403
-            )
-
-            return json({ 'errors': [ error.serialize() ] }, status=403)
-
-        if not isinstance(data, dict):
-
-            error = Error(
-                title = 'Update Error',
-                detail = 'Invalid data attribute.',
-                links = {
-                    'about': 'https://jsonapi.org/format/#crud-creating'
-                },
-                status = 403
-            )
-
-            return json({ 'errors': [ error.serialize() ] }, status=403)
-
-        type = data.get('type')
-
-        if not type:
-
-            error = Error(
-                title = 'Update Error',
-                detail = 'Type is missing.',
-                status = 403
-            )
-
-            return json({ 'errors': [ error.serialize() ] }, status=403)
-
-        if not type == cls._table:
-
-            error = Error(
-                title = 'Update Error',
-                detail = 'Type in payload does not match collection type.',
-                status = 403
-            )
-
-            return json({ 'errors': [ error.serialize() ] }, status=403)
-
-        _id = data.get('id')
-
-        if not _id:
-
-            error = Error(
-                title = 'Update Error',
-                detail = 'ID is missing.',
-                status = 403
-            )
-
-            return json({ 'errors': [ error.serialize() ] }, status=403)
-
-        if not id == _id:
-
-            error = Error(
-                title = 'Update Error',
-                detail = 'ID provided does not match ID in the URL.',
-                status = 403
-            )
-
-            return json({ 'errors': [ error.serialize() ] }, status=403)
+        data = request.json.get('data')
 
         attributes = data.get('attributes')
-
-        if not attributes:
-
-            error = Error(
-                title = 'Update Error',
-                detail = 'No attributes provided.',
-                status = 403
-            )
-
-            return json({ 'errors': [ error.serialize() ] }, status=403)
-
-        model = None
 
         try:
 
