@@ -1,11 +1,14 @@
-from sugar_odm import MemoryModel, Model, Field
+from sugar_odm import MongoDBModel, Model, Field
 from sugar_api import JSONAPIMixin
 
 
-class Name(Model):
-    first = Field(required=True)
-    last = Field(required=True)
+class AccountType(MongoDBModel, JSONAPIMixin):
+    name = Field(required=True)
+    attributes = Field(type=dict, required=True)
 
 
-class User(MemoryModel, JSONAPIMixin):
-    name = Field(type=Name)
+class User(MongoDBModel, JSONAPIMixin):
+    username = Field(required=True)
+    password = Field(required=True)
+
+    type = Field(required=True)
