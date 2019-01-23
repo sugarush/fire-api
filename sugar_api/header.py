@@ -1,6 +1,3 @@
-import sys
-
-import jwt
 from sanic.response import json
 
 from . error import Error
@@ -12,7 +9,6 @@ __content_type__ = 'application/vnd.api+json'
 def content_type(handler):
     async def decorator(request, *args, **kargs):
         content_type = request.headers.get('Content-Type')
-        print(content_type, __content_type__)
         if not content_type or not content_type == __content_type__:
             error = Error(
                 title = 'Invalid Content-Type Header',

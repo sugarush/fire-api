@@ -7,7 +7,7 @@ from sanic.response import json
 from sugar_odm import Model
 
 from . error import Error
-from . decorator import content_type, accept
+from . header import content_type, accept
 
 
 __secret__ = str(uuid4())
@@ -47,6 +47,8 @@ def webtoken(handler):
                     status = 403
                 )
                 return json({ 'errors': [ error.serialize() ] }, status=403)
+        else:
+            kargs['token'] = None
         return await handler(request, *args, **kargs)
     return decorator
 
