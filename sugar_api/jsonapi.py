@@ -2,11 +2,11 @@ from sanic import Blueprint
 from sanic.response import json
 
 from . error import Error
+from . webtoken import WebToken, webtoken
+from . decorator import content_type, accept
 
 
 class JSONAPIMixin(object):
-
-    __content_type__ = 'application/vnd.api+json'
 
     def _to_jsonapi(self):
         data = { }
@@ -30,80 +30,51 @@ class JSONAPIMixin(object):
         return model
 
     @classmethod
-    def blueprint(cls, *args, **kargs):
+    def resource(cls, *args, **kargs):
 
         if not len(args) > 0:
             args = [ cls._table ]
 
         bp = Blueprint(*args, **kargs)
 
-        route = '/{path}'.format(path=cls._table)
+        url = '/{path}'.format(path=cls._table)
 
-        @bp.get(route)
-        @cls._accept
+        @bp.get(url)
+        @accept
+        @webtoken
         async def read(*args, **kargs):
             return await cls._read(*args, **kargs)
 
-        @bp.post(route)
-        @cls._content_type
-        @cls._accept
+        @bp.post(url)
+        @content_type
+        @accept
+        @webtoken
         async def create(*args, **kargs):
             return await cls._create(*args, **kargs)
 
-        @bp.get(route + '/<id>')
-        @cls._accept
+        @bp.get(url + '/<id>')
+        @accept
+        @webtoken
         async def read(*args, **kargs):
             return await cls._read(*args, **kargs)
 
-        @bp.patch(route + '/<id>')
-        @cls._content_type
-        @cls._accept
+        @bp.patch(url + '/<id>')
+        @content_type
+        @accept
+        @webtoken
         async def update(*args, **kargs):
             return await cls._update(*args, **kargs)
 
-        @bp.delete(route + '/<id>')
-        @cls._accept
+        @bp.delete(url + '/<id>')
+        @accept
+        @webtoken
         async def delete(*args, **kargs):
             return await cls._delete(*args, **kargs)
 
         return bp
 
     @classmethod
-    def _content_type(cls, handler):
-        async def decorator(request, *args, **kargs):
-            content_type = request.headers.get('Content-Type')
-            if not content_type or not content_type == cls.__content_type__:
-                error = Error(
-                    title = 'Invalid Content-Type Header',
-                    detail = 'The Content-Type header provided is of an invalid type.',
-                    links = {
-                        'about': 'http://jsonapi.org/format/#content-negotiation'
-                    },
-                    status = 415
-                )
-                return json({ 'errors': [ error.serialize() ] }, status=415)
-            return await handler(request, *args, **kargs)
-        return decorator
-
-    @classmethod
-    def _accept(cls, handler):
-        async def decorator(request, *args, **kargs):
-            accept = request.headers.get('Accept')
-            if not accept or not accept == cls.__content_type__:
-                error = Error(
-                    title = 'Invalid Accept Header',
-                    detail = 'The Accept header provided is of an invalid type.',
-                    links = {
-                        'about': 'http://jsonapi.org/format/#content-negotiation'
-                    },
-                    status = 415
-                )
-                return json({ 'errors': [ error.serialize() ] }, status=415)
-            return await handler(request, *args, **kargs)
-        return decorator
-
-    @classmethod
-    async def _create(cls, request):
+    async def _create(cls, request, token=None):
 
         data = None
 
@@ -227,7 +198,7 @@ class JSONAPIMixin(object):
         return json({ 'data': model._to_jsonapi() }, status=201)
 
     @classmethod
-    async def _read(cls, request, id=None):
+    async def _read(cls, request, id=None, token=None):
         if id:
 
             model = None
@@ -299,7 +270,7 @@ class JSONAPIMixin(object):
             }, status=200)
 
     @classmethod
-    async def _update(cls, request, id=None):
+    async def _update(cls, request, id=None, token=None):
 
         data = None
 
@@ -433,7 +404,7 @@ class JSONAPIMixin(object):
         return json({ 'data': model._to_jsonapi() }, status=200)
 
     @classmethod
-    async def _delete(cls, request, id):
+    async def _delete(cls, request, id, token=None):
 
         try:
 
