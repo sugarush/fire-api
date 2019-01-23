@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 import jwt
 from sanic import Blueprint
 from sanic.response import json
@@ -6,16 +8,32 @@ from sugar_odm import Model
 
 from sugar_api import Error
 
+__secret__ = str(uuid4())
+__algorithm__ = 'HS256'
 
 class WebToken(object):
 
-    __secret__ = ''
-    __algorithm__ = 'HS256'
     __content_type__ = 'application/vnd.api+json'
 
     @classmethod
     async def payload(cls, username, password):
         raise NotImplementedError('WebToken.payload not implemented.')
+
+    @classmethod
+    def set_secret(cls, secret):
+        __secret__ = secret
+
+    @classmethod
+    def get_secret(cls):
+        return __secret__
+
+    @classmethod
+    def set_algorithm(cls, algorithm):
+        __algorithm__ = algorithm
+
+    @classmethod
+    def get_algorithm(cls):
+        return __algorithm__
 
     @classmethod
     def blueprint(cls, *args, **kargs):
@@ -144,6 +162,6 @@ class WebToken(object):
 
             return json({ 'errors': [ error.serialize() ] }, status=403)
 
-        token = jwt.encode(payload, cls.__secret__, algorithm=cls.__algorithm__)
+        token = jwt.encode(payload, __secret__, algorithm=__algorithm__)
 
         return json({ 'data': { 'token': token } }, 200)

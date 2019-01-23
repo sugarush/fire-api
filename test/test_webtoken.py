@@ -80,8 +80,6 @@ class WebTokenTest(AsyncTestCase):
 
         class Authentication(WebToken):
 
-            __secret__ = 'secret'
-
             @classmethod
             async def payload(cls, username, password):
                 user = await Model.find_one({
