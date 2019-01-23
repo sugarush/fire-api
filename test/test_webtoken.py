@@ -37,8 +37,6 @@ class WebTokenTest(AsyncTestCase):
 
     async def test_no_username(self):
 
-        WebToken.blueprint(secret='secret')
-
         response = await WebToken._post(Document({
             'json': {
                 'data': {
@@ -52,8 +50,6 @@ class WebTokenTest(AsyncTestCase):
         self.assertEqual(response.errors[0].detail, 'Missing username.')
 
     async def test_no_password(self):
-
-        WebToken.blueprint(secret='secret')
 
         response = await WebToken._post(Document({
             'json': {
@@ -84,6 +80,8 @@ class WebTokenTest(AsyncTestCase):
 
         class Authentication(WebToken):
 
+            __secret__ = 'secret'
+
             @classmethod
             async def payload(cls, username, password):
                 user = await Model.find_one({
@@ -97,8 +95,6 @@ class WebTokenTest(AsyncTestCase):
             'username': 'test',
             'password': 'ing'
         })
-
-        Authentication.blueprint(secret='secret')
 
         response = await Authentication._post(Document({
             'json': {

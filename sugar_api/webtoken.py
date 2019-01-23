@@ -9,6 +9,8 @@ from sugar_api import Error
 
 class WebToken(object):
 
+    __secret__ = ''
+    __algorithm__ = 'HS256'
     __content_type__ = 'application/vnd.api+json'
 
     @classmethod
@@ -18,23 +20,13 @@ class WebToken(object):
     @classmethod
     def blueprint(cls, *args, **kargs):
 
-        cls.secret = kargs.get('secret')
-
-        if not cls.secret:
+        if not cls.__secret__:
             raise Exception('Secret not provided.')
-
-        if 'secret' in kargs:
-            del kargs['secret']
 
         cls.url = kargs.get('url', 'authorization')
 
         if 'url' in kargs:
             del kargs['url']
-
-        cls.token_algorithm = kargs.get('token_algorithm', 'HS256')
-
-        if 'token_algorithm' in kargs:
-            del kargs['token_algorithm']
 
         if not len(args) > 0:
             args = [ cls.url ]
@@ -152,6 +144,6 @@ class WebToken(object):
 
             return json({ 'errors': [ error.serialize() ] }, status=403)
 
-        token = jwt.encode(payload, cls.secret, algorithm=cls.token_algorithm)
+        token = jwt.encode(payload, cls.__secret__, algorithm=cls.__algorithm__)
 
         return json({ 'data': { 'token': token } }, 200)
