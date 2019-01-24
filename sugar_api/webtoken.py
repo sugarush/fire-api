@@ -107,79 +107,62 @@ class WebToken(object):
 
     @classmethod
     async def _post(cls, request):
-
         data = None
 
         if request.json:
-
             data = request.json.get('data')
 
         if not data:
-
             error = Error(
                 title = 'Create Token Error',
                 detail = 'No data provided.',
                 status = 403
             )
-
             return json({ 'errors': [ error.serialize() ] }, status=403)
 
         if not isinstance(data, dict):
-
             error = Error(
                 title = 'Create Token Error',
                 detail = 'Data is not a JSON object.',
                 status = 403
             )
-
             return json({ 'errors': [ error.serialize() ] }, status=403)
 
         username = data.get('username')
 
         if not username:
-
             message = 'Missing username.'.format(
                 username = username
             )
-
             error = Error(
                 title = 'Create Token Error',
                 detail = message,
                 status = 403
             )
-
             return json({ 'errors': [ error.serialize() ] }, status=403)
 
         password = data.get('password')
 
         if not password:
-
             message = 'Missing password.'.format(
                 password = password
             )
-
             error = Error(
                 title = 'Create Token Error',
                 detail = message,
                 status = 403
             )
-
             return json({ 'errors': [ error.serialize() ] }, status=403)
 
         try:
-
             payload = await cls.payload(username, password)
-
         except Exception as e:
-
             error = Error(
                 title = 'Create Token Error',
                 detail = str(e),
                 status = 403
             )
-
             return json({ 'errors': [ error.serialize() ] }, status=403)
 
         token = jwt.encode(payload, __secret__, algorithm=__algorithm__)
-
         return json({ 'data': { 'token': token } }, 200)
