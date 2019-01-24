@@ -4,12 +4,12 @@ from sanic.response import json
 from . error import Error
 from . webtoken import WebToken, webtoken
 from . header import content_type, accept
-from . scope import scope
+from . acl import acl
 
 
 class JSONAPIMixin(object):
 
-    __scope__ = None
+    __acl__ = None
 
     def _to_jsonapi(self):
         data = { }
@@ -45,7 +45,7 @@ class JSONAPIMixin(object):
         @bp.get(url)
         @accept
         @webtoken
-        @scope('read_all', cls.__scope__)
+        @acl('read_all', cls.__acl__)
         async def read(*args, **kargs):
             return await cls._read(*args, **kargs)
 
@@ -54,14 +54,14 @@ class JSONAPIMixin(object):
         @accept
         @cls._check_create
         @webtoken
-        @scope('create', cls.__scope__)
+        @acl('create', cls.__acl__)
         async def create(*args, **kargs):
             return await cls._create(*args, **kargs)
 
         @bp.get(url + '/<id>')
         @accept
         @webtoken
-        @scope('read', cls.__scope__)
+        @acl('read', cls.__acl__)
         async def read(*args, **kargs):
             return await cls._read(*args, **kargs)
 
@@ -70,14 +70,14 @@ class JSONAPIMixin(object):
         @accept
         @cls._check_update
         @webtoken
-        @scope('update', cls.__scope__)
+        @acl('update', cls.__acl__)
         async def update(*args, **kargs):
             return await cls._update(*args, **kargs)
 
         @bp.delete(url + '/<id>')
         @accept
         @webtoken
-        @scope('delete', cls.__scope__)
+        @acl('delete', cls.__acl__)
         async def delete(*args, **kargs):
             return await cls._delete(*args, **kargs)
 
