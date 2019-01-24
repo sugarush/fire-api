@@ -25,7 +25,7 @@ class ACLTest(TestCase):
         result = _check_acl('action', {
             'self': [ ]
         }, {
-            'id': 'aabbcc'
+            'data': { 'id': 'aabbcc' }
         }, 'aabbcc')
 
         self.assertFalse(result)
@@ -35,7 +35,7 @@ class ACLTest(TestCase):
         result = _check_acl('action', {
             'self': ['action']
         }, {
-            'id': 'aabbcc'
+            'data': { 'id': 'aabbcc' }
         }, 'aabbcc')
 
         self.assertTrue(result)
@@ -45,7 +45,7 @@ class ACLTest(TestCase):
         result = _check_acl('action', {
             'test_group': [ ]
         }, {
-            'type': 'test_group'
+            'data': { 'type': 'test_group' }
         }, None)
 
         self.assertFalse(result)
@@ -55,7 +55,7 @@ class ACLTest(TestCase):
         result = _check_acl('action', {
             'test_group': ['action']
         }, {
-            'type': 'test_group'
+            'data': { 'type': 'test_group' }
         }, None)
 
         self.assertTrue(result)
@@ -72,17 +72,19 @@ class ACLTest(TestCase):
 
         result = _check_acl('action', {
             'other': ['action']
-        }, { }, None)
+        }, {
+            'data': { }
+        }, None)
 
         self.assertTrue(result)
 
-    def test_action_group_and_user(self):
+    def test_action_self_and_group(self):
 
         result = _check_acl('action', {
             'self': ['action'],
             'test_group': [ ]
         }, {
-            'type': 'test_group'
+            'data': { 'type': 'test_group' }
         }, None)
 
         self.assertTrue(result)
@@ -91,7 +93,7 @@ class ACLTest(TestCase):
             'self': [ ],
             'test_group': ['action']
         }, {
-            'type': 'test_group'
+            'data': { 'type': 'test_group' }
         }, None)
 
         self.assertTrue(result)
