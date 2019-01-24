@@ -86,6 +86,7 @@ class JSONAPIMixin(object):
     @classmethod
     def _check_create(cls, handler):
         async def decorator(request, *args, **kargs):
+
             data = None
 
             if request.json:
