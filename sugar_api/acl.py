@@ -7,17 +7,14 @@ def acl(action, acl):
     def wrapper(handler):
         async def decorator(request, *args, **kargs):
             token = kargs.get('token')
-            try:
-                id = args[0]
-            except:
-                id = None
-                if not _check_acl(action, acl, token, id):
-                    error = Error(
-                        title = 'ACL Error',
-                        detail = 'Insufficient priviliges.',
-                        status = 403
-                    )
-                    return json({ 'errors': [ error.serialize() ] }, status=403)
+            id = kargs.get('id')
+            if not _check_acl(action, acl, token, id):
+                error = Error(
+                    title = 'ACL Error',
+                    detail = 'Insufficient priviliges.',
+                    status = 403
+                )
+                return json({ 'errors': [ error.serialize() ] }, status=403)
             return await handler(request, *args, **kargs)
         return decorator
     return wrapper
