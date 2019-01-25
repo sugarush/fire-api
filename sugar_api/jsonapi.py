@@ -352,7 +352,7 @@ class JSONAPIMixin(object):
 
                 models = [ ]
 
-                async for model in cls.find(request.args):
+                async for model in cls.find():
 
                     models.append(model)
 
