@@ -13,13 +13,14 @@ export default function() {
       }
     });
 
+
     check(res, {
       'status is 200': (res) => res.status === 200,
       'content-type is application/vnd.api+json': (res) => {
-        res.headers['Content-Type'] === 'application/vnd.api+json';
+        return res.headers['Content-Type'] === 'application/vnd.api+json'
       },
       'content ok': (res) => {
-        JSON.parse(res.body).hasOwnProperty('data');
+        return JSON.parse(res.body).hasOwnProperty('data');
       }
     });
 }
