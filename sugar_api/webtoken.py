@@ -165,4 +165,4 @@ class WebToken(object):
             return json({ 'errors': [ error.serialize() ] }, status=403)
 
         token = jwt.encode(payload, __secret__, algorithm=__algorithm__)
-        return json({ 'data': { 'token': token } }, 200)
+        return json({ 'data': { 'attributes': { 'token': token } } }, 200)
