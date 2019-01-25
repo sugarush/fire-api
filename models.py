@@ -1,25 +1,24 @@
-from sugar_odm import MongoDBModel, Model, Field
+from sugar_odm import MemoryModel, Field
 from sugar_api import JSONAPIMixin
 
 
-class AccountType(MongoDBModel, JSONAPIMixin):
-
-    __acl__ = { 'administrator': ['all'] }
-
-    name = Field(required=True)
-    attributes = Field(type=dict)
-
-
-class User(MongoDBModel, JSONAPIMixin):
+class User(MemoryModel, JSONAPIMixin):
 
     __acl__ = {
-        'self': ['read', 'read_all', 'update'],
+        'self': ['read', 'update'],
         'administrator': ['all'],
-        'other': ['read', 'read_all'],
-        'unauthorized': ['create']
+        'other': ['read'],
+        'unauthorized': ['create', 'read', 'read_all']
     }
 
     username = Field(required=True)
     password = Field(required=True)
 
-    type = Field(required=True)
+    group = Field(required=True)
+
+
+class Group(MemoryModel, JSONAPIMixin):
+
+    __acl__ = { 'administrator': ['all'] }
+
+    name = Field(required=True)
