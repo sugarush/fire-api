@@ -9,7 +9,7 @@ __content_type__ = 'application/vnd.api+json'
 def content_type(handler):
     async def decorator(request, *args, **kargs):
         content_type = request.headers.get('Content-Type')
-        if not content_type or not content_type == __content_type__:
+        if not content_type or not content_type in [ __content_type__, '*', '*/*' ]:
             error = Error(
                 title = 'Invalid Content-Type Header',
                 detail = 'The Content-Type header provided is of an invalid type.',
