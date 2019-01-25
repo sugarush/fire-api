@@ -105,4 +105,4 @@ class WebTokenTest(AsyncTestCase):
 
         response = decode(response)
 
-        self.assertTrue(response.data.token)
+        self.assertTrue(response.data.attributes.token)
