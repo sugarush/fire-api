@@ -1,4 +1,4 @@
-from sanic.response import json
+from . header import jsonapi
 
 from . error import Error
 
@@ -14,7 +14,7 @@ def acl(action, acl):
                     detail = 'Insufficient priviliges.',
                     status = 403
                 )
-                return json({ 'errors': [ error.serialize() ] }, status=403)
+                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
             return await handler(request, *args, **kargs)
         return decorator
     return wrapper

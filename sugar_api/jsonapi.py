@@ -1,9 +1,8 @@
 from sanic import Blueprint
-from sanic.response import json
 
 from . error import Error
 from . webtoken import WebToken, webtoken
-from . header import content_type, accept
+from . header import content_type, accept, jsonapi
 from . acl import acl
 
 
@@ -101,7 +100,7 @@ class JSONAPIMixin(object):
                     status = 403
                 )
 
-                return json({ 'errors': [ error.serialize() ] }, status=403)
+                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
             if not isinstance(data, dict):
 
@@ -114,7 +113,7 @@ class JSONAPIMixin(object):
                     status = 403
                 )
 
-                return json({ 'errors': [ error.serialize() ] }, status=403)
+                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
             type = data.get('type')
 
@@ -126,7 +125,7 @@ class JSONAPIMixin(object):
                     status = 403
                 )
 
-                return json({ 'errors': [ error.serialize() ] }, status=403)
+                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
             if not type == cls._table:
 
@@ -136,7 +135,7 @@ class JSONAPIMixin(object):
                     status = 403
                 )
 
-                return json({ 'errors': [ error.serialize() ] }, status=403)
+                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
             attributes = data.get('attributes')
 
@@ -148,7 +147,7 @@ class JSONAPIMixin(object):
                     status = 403
                 )
 
-                return json({ 'errors': [ error.serialize() ] }, status=403)
+                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
             return await handler(request, *args, **kargs)
 
@@ -172,7 +171,7 @@ class JSONAPIMixin(object):
                     status = 403
                 )
 
-                return json({ 'errors': [ error.serialize() ] }, status=403)
+                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
             if not isinstance(data, dict):
 
@@ -185,7 +184,7 @@ class JSONAPIMixin(object):
                     status = 403
                 )
 
-                return json({ 'errors': [ error.serialize() ] }, status=403)
+                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
             type = data.get('type')
 
@@ -197,7 +196,7 @@ class JSONAPIMixin(object):
                     status = 403
                 )
 
-                return json({ 'errors': [ error.serialize() ] }, status=403)
+                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
             if not type == cls._table:
 
@@ -207,7 +206,7 @@ class JSONAPIMixin(object):
                     status = 403
                 )
 
-                return json({ 'errors': [ error.serialize() ] }, status=403)
+                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
             _id = data.get('id')
 
@@ -219,7 +218,7 @@ class JSONAPIMixin(object):
                     status = 403
                 )
 
-                return json({ 'errors': [ error.serialize() ] }, status=403)
+                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
             if not id == _id:
 
@@ -229,7 +228,7 @@ class JSONAPIMixin(object):
                     status = 403
                 )
 
-                return json({ 'errors': [ error.serialize() ] }, status=403)
+                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
             attributes = data.get('attributes')
 
@@ -241,7 +240,7 @@ class JSONAPIMixin(object):
                     status = 403
                 )
 
-                return json({ 'errors': [ error.serialize() ] }, status=403)
+                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
             return await handler(request, id, *args, **kargs)
 
@@ -267,7 +266,7 @@ class JSONAPIMixin(object):
                 status = 403
             )
 
-            return json({ 'errors': [ error.serialize() ] }, status=403)
+            return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
         try:
 
@@ -285,7 +284,7 @@ class JSONAPIMixin(object):
                     status = 409
                 )
 
-                return json({ 'errors': [ error.serialize() ] }, status=409)
+                return jsonapi({ 'errors': [ error.serialize() ] }, status=409)
 
         except Exception as e:
 
@@ -295,7 +294,7 @@ class JSONAPIMixin(object):
                 status = 500
             )
 
-            return json({ 'errors': [ error.serialize() ] }, status=500)
+            return jsonapi({ 'errors': [ error.serialize() ] }, status=500)
 
         try:
 
@@ -309,9 +308,9 @@ class JSONAPIMixin(object):
                 status = 500
             )
 
-            return json({ 'errors': [ error.serialize() ] }, status=500)
+            return jsonapi({ 'errors': [ error.serialize() ] }, status=500)
 
-        return json({ 'data': model._to_jsonapi() }, status=201)
+        return jsonapi({ 'data': model._to_jsonapi() }, status=201)
 
     @classmethod
     async def _read(cls, request, id=None, token=None):
@@ -329,7 +328,7 @@ class JSONAPIMixin(object):
                     status = 500
                 )
 
-                return json({ 'errors': [ error.serialize() ] }, status=500)
+                return jsonapi({ 'errors': [ error.serialize() ] }, status=500)
 
             if not model:
 
@@ -339,12 +338,12 @@ class JSONAPIMixin(object):
                     status = 404
                 )
 
-                return json({
+                return jsonapi({
                     'data': None,
                     'errors': [ error.serialize() ]
                 }, status=404)
 
-            return json({ 'data': model._to_jsonapi() }, status=200)
+            return jsonapi({ 'data': model._to_jsonapi() }, status=200)
 
         else:
 
@@ -364,7 +363,7 @@ class JSONAPIMixin(object):
                     status = 500
                 )
 
-                return json({ 'errors': [ error.serialize() ] }, status=500)
+                return jsonapi({ 'errors': [ error.serialize() ] }, status=500)
 
             if not models:
 
@@ -374,12 +373,12 @@ class JSONAPIMixin(object):
                     status = 404
                 )
 
-                return json({
+                return jsonapi({
                     'data': [ ],
                     'errors': [ error.serialize() ]
                 }, status=404)
 
-            return json({
+            return jsonapi({
                 'data': list(map(lambda model: model._to_jsonapi(), models))
             }, status=200)
 
@@ -405,7 +404,7 @@ class JSONAPIMixin(object):
                 status = 500
             )
 
-            return json({ 'errors': [ error.serialize() ] }, status=500)
+            return jsonapi({ 'errors': [ error.serialize() ] }, status=500)
 
         try:
 
@@ -419,7 +418,7 @@ class JSONAPIMixin(object):
                 status = 500
             )
 
-            return json({ 'errors': [ error.serialize() ] }, status=500)
+            return jsonapi({ 'errors': [ error.serialize() ] }, status=500)
 
         if not model.id == id:
 
@@ -429,7 +428,7 @@ class JSONAPIMixin(object):
                 status = 403
             )
 
-            return json({ 'errors': [ error.serialize() ] }, status=403)
+            return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
         try:
 
@@ -443,9 +442,9 @@ class JSONAPIMixin(object):
                 status = 500
             )
 
-            return json({ 'errors': [ error.serialize() ] }, status=500)
+            return jsonapi({ 'errors': [ error.serialize() ] }, status=500)
 
-        return json({ 'data': model._to_jsonapi() }, status=200)
+        return jsonapi({ 'data': model._to_jsonapi() }, status=200)
 
     @classmethod
     async def _delete(cls, request, id, token=None):
@@ -462,7 +461,7 @@ class JSONAPIMixin(object):
                 status = 500
             )
 
-            return json({ 'errors': [ error.serialize() ] }, status=500)
+            return jsonapi({ 'errors': [ error.serialize() ] }, status=500)
 
         try:
 
@@ -476,6 +475,6 @@ class JSONAPIMixin(object):
                 status = 500
             )
 
-            return json({ 'errors': [ error.serialize() ] }, status=500)
+            return jsonapi({ 'errors': [ error.serialize() ] }, status=500)
 
-        return json({ }, status=200)
+        return jsonapi({ }, status=200)

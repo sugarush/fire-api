@@ -5,6 +5,12 @@ from . error import Error
 
 __content_type__ = 'application/vnd.api+json'
 
+def jsonapi(*args, **kargs):
+    kargs['headers'] = {
+        'Content-Type': __content_type__
+    }
+    return json(*args, **kargs)
+
 
 def content_type(handler):
     async def decorator(request, *args, **kargs):
@@ -18,7 +24,7 @@ def content_type(handler):
                 },
                 status = 403
             )
-            return json({ 'errors': [ error.serialize() ] }, status=403)
+            return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
         return await handler(request, *args, **kargs)
     return decorator
 
@@ -34,6 +40,6 @@ def accept(handler):
                 },
                 status = 403
             )
-            return json({ 'errors': [ error.serialize() ] }, status=403)
+            return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
         return await handler(request, *args, **kargs)
     return decorator

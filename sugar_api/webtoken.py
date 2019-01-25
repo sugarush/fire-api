@@ -2,12 +2,11 @@ from uuid import uuid4
 
 import jwt
 from sanic import Blueprint
-from sanic.response import json
 
 from sugar_odm import Model
 
 from . error import Error
-from . header import content_type, accept
+from . header import content_type, accept, jsonapi
 
 
 __secret__ = str(uuid4())
@@ -118,7 +117,7 @@ class WebToken(object):
                 detail = 'No data provided.',
                 status = 403
             )
-            return json({ 'errors': [ error.serialize() ] }, status=403)
+            return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
         if not isinstance(data, dict):
             error = Error(
@@ -126,7 +125,7 @@ class WebToken(object):
                 detail = 'Data is not a JSON object.',
                 status = 403
             )
-            return json({ 'errors': [ error.serialize() ] }, status=403)
+            return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
         username = data.get('username')
 
@@ -139,7 +138,7 @@ class WebToken(object):
                 detail = message,
                 status = 403
             )
-            return json({ 'errors': [ error.serialize() ] }, status=403)
+            return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
         password = data.get('password')
 
@@ -152,7 +151,7 @@ class WebToken(object):
                 detail = message,
                 status = 403
             )
-            return json({ 'errors': [ error.serialize() ] }, status=403)
+            return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
         try:
             payload = await cls.payload(username, password)
@@ -162,7 +161,7 @@ class WebToken(object):
                 detail = str(e),
                 status = 403
             )
-            return json({ 'errors': [ error.serialize() ] }, status=403)
+            return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
         token = jwt.encode(payload, __secret__, algorithm=__algorithm__)
-        return json({ 'data': { 'attributes': { 'token': token } } }, 200)
+        return jsonapi({ 'data': { 'attributes': { 'token': token } } }, 200)
