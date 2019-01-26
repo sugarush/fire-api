@@ -11,12 +11,6 @@ def jsonapi(*args, **kargs):
     }
     return json(*args, **kargs)
 
-def jsonapi_empty(**kargs):
-    kargs['headers'] = {
-        'Content-Type': __content_type__
-    }
-    return text('', **kargs)
-
 def content_type(handler):
     async def decorator(request, *args, **kargs):
         content_type = request.headers.get('Content-Type')

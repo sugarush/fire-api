@@ -4,7 +4,7 @@ from sanic.response import text
 from . acl import acl
 from . cors import CORS
 from . error import Error
-from . header import content_type, accept, jsonapi, jsonapi_empty
+from . header import content_type, accept, jsonapi
 from . webtoken import WebToken, webtoken
 
 
@@ -506,4 +506,4 @@ class JSONAPIMixin(object):
 
             return jsonapi({ 'errors': [ error.serialize() ] }, status=500)
 
-        return jsonapi_empty(status=200)
+        return jsonapi({ }, status=200)
