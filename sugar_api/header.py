@@ -1,4 +1,4 @@
-from sanic.response import json
+from sanic.response import json, text
 
 from . error import Error
 
@@ -11,6 +11,11 @@ def jsonapi(*args, **kargs):
     }
     return json(*args, **kargs)
 
+def jsonapi_empty(**kargs):
+    kargs['headers'] = {
+        'Content-Type': __content_type__
+    }
+    return text('', **kargs)
 
 def content_type(handler):
     async def decorator(request, *args, **kargs):
