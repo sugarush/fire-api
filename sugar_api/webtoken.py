@@ -2,6 +2,7 @@ from uuid import uuid4
 
 import jwt
 from sanic import Blueprint
+from sanic.response import text
 
 from sugar_odm import Model
 
