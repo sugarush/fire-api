@@ -18,7 +18,7 @@ def content_type(handler):
         if not content_type or not content_type == __content_type__:
             error = Error(
                 title = 'Invalid Content-Type Header',
-                detail = 'The Content-Type header provided is of an invalid type.',
+                detail = 'The Content-Type header provided is of an invalid type: {content_type}.'.format(content_type=content_type),
                 links = {
                     'about': 'http://jsonapi.org/format/#content-negotiation'
                 },
@@ -34,7 +34,7 @@ def accept(handler):
         if not accept or not accept == __content_type__:
             error = Error(
                 title = 'Invalid Accept Header',
-                detail = 'The Accept header provided is of an invalid type.',
+                detail = 'The Accept header provided is of an invalid type: {accept}.'.format(accept=accept),
                 links = {
                     'about': 'http://jsonapi.org/format/#content-negotiation'
                 },
