@@ -114,10 +114,10 @@ class WebToken(object):
     async def _preflight(request, *args, **kargs):
         headers = {
             'Access-Control-Allow-Origin': CORS.get_origins(),
-            'Access-Control-Allow-Methods': 'POST PATCH',
-            'Access-Control-Allow-Headers': 'Content-Type Accept'
+            'Access-Control-Allow-Methods': 'POST, PATCH',
+            'Access-Control-Allow-Headers': 'Content-Type, Accept'
         }
-        text('', headers=headers)
+        return text('', headers=headers)
 
     @classmethod
     async def _post(cls, request):
