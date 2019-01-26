@@ -142,7 +142,27 @@ class WebToken(object):
             )
             return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
-        username = data.get('username')
+        attributes = data.get('attributes')
+
+        if not attributes:
+            error = Error(
+                title = 'Create Token Error',
+                detail = 'No attributes provided.',
+                status = 403
+            )
+
+            return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
+
+        if not isinstance(attributes, dict):
+            error = Error(
+                title = 'Create Token Error',
+                detail = 'Attributes is not a JSON object.',
+                status = 403
+            )
+
+            return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
+
+        username = attributes.get('username')
 
         if not username:
             message = 'Missing username.'.format(
@@ -155,7 +175,7 @@ class WebToken(object):
             )
             return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
-        password = data.get('password')
+        password = attributes.get('password')
 
         if not password:
             message = 'Missing password.'.format(
