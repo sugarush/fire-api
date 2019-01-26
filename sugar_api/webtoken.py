@@ -27,6 +27,13 @@ def webtoken(handler):
         authorization = request.headers.get('Authorization')
         if authorization:
             authorization = authorization.split(' ')
+            if not len(authorization) == 2:
+                error = Error(
+                    title = 'Invalid Authorization Header',
+                    detail = 'The authorization header is invalid.',
+                    status = 403
+                )
+                return json({ 'errors': [ error.serialize() ] }, status=403)
             if authorization[0].lower() == 'bearer':
                 token = authorization[1]
                 try:
