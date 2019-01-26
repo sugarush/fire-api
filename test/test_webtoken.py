@@ -40,7 +40,9 @@ class WebTokenTest(AsyncTestCase):
         response = await WebToken._post(Document({
             'json': {
                 'data': {
-                    'non-existent': 'value'
+                    'attributes': {
+                        'non-existent': 'value'
+                    }
                 }
             }
         }))
@@ -54,7 +56,9 @@ class WebTokenTest(AsyncTestCase):
         response = await WebToken._post(Document({
             'json': {
                 'data': {
-                    'username': 'test'
+                    'attributes': {
+                        'username': 'test'
+                    }
                 }
             }
         }))
@@ -97,8 +101,10 @@ class WebTokenTest(AsyncTestCase):
         response = await Authentication._post(Document({
             'json': {
                 'data': {
-                    'username': 'test',
-                    'password': 'ing'
+                    'attributes': {
+                        'username': 'test',
+                        'password': 'ing'
+                    }
                 }
             }
         }))
