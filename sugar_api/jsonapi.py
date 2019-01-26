@@ -1,9 +1,12 @@
 from sanic import Blueprint
+from sanic.response import text
 
-from . error import Error
-from . webtoken import WebToken, webtoken
-from . header import content_type, accept, jsonapi
 from . acl import acl
+from . cors import CORS
+from . error import Error
+from . header import content_type, accept, jsonapi
+from . webtoken import WebToken, webtoken
+
 
 
 class JSONAPIMixin(object):
@@ -40,6 +43,14 @@ class JSONAPIMixin(object):
         bp = Blueprint(*args, **kargs)
 
         url = '/{path}'.format(path=cls._table)
+
+        @bp.options(url)
+        async def options(*args, **kargs):
+            return await cls._preflight(*args, **kargs)
+
+        @bp.options(url + '/<id>')
+        async def options(*args, **kargs):
+            return await cls._preflight_id(*args, **kargs)
 
         @bp.get(url)
         @accept
@@ -81,6 +92,24 @@ class JSONAPIMixin(object):
             return await cls._delete(*args, **kargs)
 
         return bp
+
+    @classmethod
+    def _preflight(cls, request, *args, **kargs):
+        headers = {
+            'Access-Control-Allow-Origin': CORS.get_origins(),
+            'Access-Control-Allow-Methods': 'GET POST',
+            'Access-Control-Allow-Headers': 'Content-Type'
+        }
+        text('', headers=headers)
+
+    @classmethod
+    def _preflight_id(cls, request, *args, **kargs):
+        headers = {
+            'Access-Control-Allow-Origin': CORS.get_origins(),
+            'Access-Control-Allow-Methods': 'GET PATCH DELETE',
+            'Access-Control-Allow-Headers': 'Content-Type Accept'
+        }
+        text('', headers=headers)
 
     @classmethod
     def _check_create(cls, handler):

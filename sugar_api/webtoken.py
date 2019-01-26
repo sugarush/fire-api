@@ -5,6 +5,7 @@ from sanic import Blueprint
 
 from sugar_odm import Model
 
+from . cors import CORS
 from . error import Error
 from . header import content_type, accept, jsonapi
 
@@ -96,6 +97,10 @@ class WebToken(object):
 
         bp = Blueprint(*args, **kargs)
 
+        @bp.options(url)
+        async def options(*args, **kargs):
+            return await cls._preflight(*args, **kargs)
+
         @bp.post(url)
         @content_type
         @accept
@@ -103,6 +108,15 @@ class WebToken(object):
             return await cls._post(*args, **kargs)
 
         return bp
+
+    @classmethod
+    async def _preflight(request, *args, **kargs):
+        headers = {
+            'Access-Control-Allow-Origin': CORS.get_origins(),
+            'Access-Control-Allow-Methods': 'POST PATCH',
+            'Access-Control-Allow-Headers': 'Content-Type Accept'
+        }
+        text('', headers=headers)
 
     @classmethod
     async def _post(cls, request):
