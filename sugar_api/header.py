@@ -1,5 +1,6 @@
 from sanic.response import json, text
 
+from . cors import CORS
 from . error import Error
 
 
@@ -7,6 +8,7 @@ __content_type__ = 'application/vnd.api+json'
 
 def jsonapi(*args, **kargs):
     kargs['headers'] = {
+        'Access-Control-Allow-Origin': CORS.get_origins(),
         'Content-Type': __content_type__
     }
     return json(*args, **kargs)
