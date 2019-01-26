@@ -115,7 +115,7 @@ class WebToken(object):
         headers = {
             'Access-Control-Allow-Origin': CORS.get_origins(),
             'Access-Control-Allow-Methods': 'POST, PATCH',
-            'Access-Control-Allow-Headers': 'Content-Type, Accept'
+            'Access-Control-Allow-Headers': 'Content-Type, Accept, Authentication'
         }
         return text('', headers=headers)
 
