@@ -84,6 +84,15 @@ class JSONAPIMixin(object):
         async def update(*args, **kargs):
             return await cls._update(*args, **kargs)
 
+        @bp.put(url + '/<id>')
+        @content_type
+        @accept
+        @cls._check_update
+        @webtoken
+        @acl('update', cls.__acl__)
+        async def update(*args, **kargs):
+            return await cls._update(*args, **kargs)
+
         @bp.delete(url + '/<id>')
         @accept
         @webtoken
@@ -98,7 +107,7 @@ class JSONAPIMixin(object):
         headers = {
             'Access-Control-Allow-Origin': CORS.get_origins(),
             'Access-Control-Allow-Methods': 'GET, POST',
-            'Access-Control-Allow-Headers': 'Content-Type'
+            'Access-Control-Allow-Headers': 'Accept, Authentication, Content-Type'
         }
         return text('', headers=headers)
 
@@ -107,7 +116,7 @@ class JSONAPIMixin(object):
         headers = {
             'Access-Control-Allow-Origin': CORS.get_origins(),
             'Access-Control-Allow-Methods': 'GET, PATCH, DELETE',
-            'Access-Control-Allow-Headers': 'Content-Type, Accept, Authentication'
+            'Access-Control-Allow-Headers': 'Accept, Authentication, Content-Type'
         }
         return text('', headers=headers)
 
