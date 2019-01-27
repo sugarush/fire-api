@@ -94,7 +94,7 @@ class JSONAPIMixin(object):
         return bp
 
     @classmethod
-    def _preflight(cls, request, *args, **kargs):
+    async def _preflight(cls, request, *args, **kargs):
         headers = {
             'Access-Control-Allow-Origin': CORS.get_origins(),
             'Access-Control-Allow-Methods': 'GET, POST',
@@ -103,7 +103,7 @@ class JSONAPIMixin(object):
         return text('', headers=headers)
 
     @classmethod
-    def _preflight_id(cls, request, *args, **kargs):
+    async def _preflight_id(cls, request, *args, **kargs):
         headers = {
             'Access-Control-Allow-Origin': CORS.get_origins(),
             'Access-Control-Allow-Methods': 'GET, PATCH, DELETE',
