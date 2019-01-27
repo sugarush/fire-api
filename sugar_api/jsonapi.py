@@ -84,15 +84,6 @@ class JSONAPIMixin(object):
         async def update(*args, **kargs):
             return await cls._update(*args, **kargs)
 
-        @bp.put(url + '/<id>')
-        @content_type
-        @accept
-        @cls._check_update
-        @webtoken
-        @acl('update', cls.__acl__)
-        async def update(*args, **kargs):
-            return await cls._update(*args, **kargs)
-
         @bp.delete(url + '/<id>')
         @accept
         @webtoken
