@@ -98,7 +98,7 @@ class JSONAPIMixin(object):
         headers = {
             'Access-Control-Allow-Origin': CORS.get_origins(),
             'Access-Control-Allow-Methods': 'GET, POST',
-            'Access-Control-Allow-Headers': 'Accept, Authentication, Content-Type'
+            'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type'
         }
         return text('', headers=headers)
 
@@ -107,7 +107,7 @@ class JSONAPIMixin(object):
         headers = {
             'Access-Control-Allow-Origin': CORS.get_origins(),
             'Access-Control-Allow-Methods': 'GET, PATCH, DELETE',
-            'Access-Control-Allow-Headers': 'Accept, Authentication, Content-Type'
+            'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type'
         }
         return text('', headers=headers)
 
