@@ -1,3 +1,5 @@
+import ujson
+
 from sanic import Blueprint
 from sanic.response import text
 
@@ -335,7 +337,22 @@ class JSONAPIMixin(object):
             try:
                 models = [ ]
 
-                async for model in cls.find():
+                query_json = request.args.get('query', '{ }')
+
+                try:
+                    query = ujson.loads(query_json)
+
+                except Exception as e:
+                    error = Error(
+                        title = 'Read Error',
+                        detail = str(e),
+                        status = 403
+                    )
+                    return jsonapi({
+                        'errors': [ error.serialize() ]
+                    }, status=403)
+
+                async for model in cls.find(query):
                     models.append(model)
 
             except Exception as e:
