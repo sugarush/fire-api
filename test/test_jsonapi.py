@@ -230,7 +230,7 @@ class JSONAPIMixinTest(AsyncTestCase):
 
         self.assertEqual(response.errors[0].detail, 'No data found.')
 
-    async def test_read_query(self):
+    async def test_read_multiple_query(self):
 
         await Mixin.add({
             'field': 'value'
