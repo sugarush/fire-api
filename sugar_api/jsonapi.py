@@ -352,7 +352,40 @@ class JSONAPIMixin(object):
                         'errors': [ error.serialize() ]
                     }, status=403)
 
-                async for model in cls.find(query):
+                sort = request.args.get('sort')
+
+                if sort:
+
+                    try:
+                        sort = filter(lambda item: item != '', sort.split(','))
+
+                    except Exception as e:
+                        error = Error(
+                            title = 'Read Error',
+                            detail = str(e),
+                            status = 403
+                        )
+                        return jsonapi({
+                            'errors': [ error.serialize() ]
+                        }, status=403)
+
+                    def prepare(item):
+                        result = [ ]
+
+                        if item.startswith('-'):
+                            result.append(-1)
+                        else:
+                            result.append(1)
+
+                        item = item.strip('-')
+
+                        result.insert(0, item)
+
+                        return result
+
+                    sort = list(map(prepare, sort))
+
+                async for model in cls.find(query, sort=sort):
                     models.append(model)
 
             except Exception as e:

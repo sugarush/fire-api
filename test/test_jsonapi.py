@@ -248,6 +248,78 @@ class JSONAPIMixinTest(AsyncTestCase):
 
         await Mixin.drop()
 
+    async def test_read_multiple_sort_ascending(self):
+
+        await Mixin.add([
+            { 'field': '2' },
+            { 'field': '1' },
+            { 'field': '3' }
+        ])
+
+        response = await Mixin._read(Document({
+            'args': {
+                'sort': 'field'
+            }
+        }))
+
+        response = decode(response)
+
+        count = 1
+
+        for data in response.data:
+            self.assertEqual(data.attributes.field, str(count))
+            count += 1
+
+        await Mixin.drop()
+
+    async def test_read_multiple_sort_descending(self):
+
+        await Mixin.add([
+            { 'field': '2' },
+            { 'field': '1' },
+            { 'field': '3' }
+        ])
+
+        response = await Mixin._read(Document({
+            'args': {
+                'sort': '-field'
+            }
+        }))
+
+        response = decode(response)
+
+        count = 3
+
+        for data in response.data:
+            self.assertEqual(data.attributes.field, str(count))
+            count -= 1
+
+        await Mixin.drop()
+
+    async def test_read_multiple_sort_missing(self):
+
+        await Mixin.add([
+            { 'field': '2' },
+            { 'field': '1' },
+            { 'field': '3' }
+        ])
+
+        response = await Mixin._read(Document({
+            'args': { }
+        }))
+
+        response = decode(response)
+
+        count = 0
+
+        results = [ '2', '1', '3' ]
+
+        for data in response.data:
+            self.assertEqual(data.attributes.field, results[count])
+            count += 1
+
+        await Mixin.drop()
+
     async def test_update_data_missing(self):
 
         #response = await Mixin._update(Document({
