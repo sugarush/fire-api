@@ -13,6 +13,8 @@ def decode(response):
 
 class WebTokenTest(AsyncTestCase):
 
+    default_loop = True
+
     async def test_no_data(self):
 
         response = await WebToken._post(Document({

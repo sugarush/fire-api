@@ -2,7 +2,7 @@ import json
 
 from sugar_asynctest import AsyncTestCase
 from sugar_document import Document
-from sugar_odm import MemoryModel, Field
+from sugar_odm import MongoDBModel, Field
 
 from sugar_api import JSONAPIMixin
 
@@ -11,11 +11,13 @@ def decode(response):
     return Document(json.loads(response.body.decode()))
 
 
-class Mixin(MemoryModel, JSONAPIMixin):
+class Mixin(MongoDBModel, JSONAPIMixin):
     field = Field()
 
 
 class JSONAPIMixinTest(AsyncTestCase):
+
+    default_loop = True
 
     async def test_create_data_missing(self):
 
@@ -194,7 +196,7 @@ class JSONAPIMixinTest(AsyncTestCase):
 
     async def test_read_by_id_no_data_found(self):
 
-        response = await Mixin._read(None, 'non-existent')
+        response = await Mixin._read(None, 'aabbccddeeffaabbccddeeff')
 
         response = decode(response)
 
@@ -227,6 +229,24 @@ class JSONAPIMixinTest(AsyncTestCase):
         response = decode(response)
 
         self.assertEqual(response.errors[0].detail, 'No data found.')
+
+    async def test_read_query(self):
+
+        await Mixin.add({
+            'field': 'value'
+        })
+
+        response = await Mixin._read(Document({
+            'args': {
+                'query': '{ "field": "value" }'
+            }
+        }))
+
+        response = decode(response)
+
+        self.assertEqual(response.data[0].attributes.field, 'value')
+
+        await Mixin.drop()
 
     async def test_update_data_missing(self):
 
