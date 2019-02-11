@@ -2,6 +2,15 @@ from sugar_odm import MemoryModel, Field
 from sugar_api import JSONAPIMixin
 
 
+class Post(MemoryModel, JSONAPIMixin):
+
+    __acl__ = {
+        '$owner': [ 'all' ]
+    }
+
+    owner = Field(required=True)
+
+
 class User(MemoryModel, JSONAPIMixin):
 
     __acl__ = {

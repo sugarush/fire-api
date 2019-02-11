@@ -3,12 +3,12 @@ from . header import jsonapi
 from . error import Error
 
 
-def acl(action, acl):
+def acl(action, acl, Model=None):
     def wrapper(handler):
         async def decorator(request, *args, **kargs):
             token = kargs.get('token')
             id = kargs.get('id')
-            if not _check_acl(action, acl, token, id):
+            if not await _check_acl(action, acl, token, id, Model):
                 error = Error(
                     title = 'ACL Error',
                     detail = 'Insufficient priviliges.',
@@ -26,7 +26,7 @@ def _check_action(action, actions):
         return True
     return False
 
-def _check_acl(action, acl, token, id):
+async def _check_acl(action, acl, token, id, Model):
 
     valid = True
 

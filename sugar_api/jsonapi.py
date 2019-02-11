@@ -57,7 +57,7 @@ class JSONAPIMixin(object):
         @bp.get(url)
         @accept
         @webtoken
-        @acl('read_all', cls.__acl__)
+        @acl('read_all', cls.__acl__, cls)
         async def read(*args, **kargs):
             return await cls._read(*args, **kargs)
 
@@ -66,14 +66,14 @@ class JSONAPIMixin(object):
         @accept
         @cls._check_create
         @webtoken
-        @acl('create', cls.__acl__)
+        @acl('create', cls.__acl__, cls)
         async def create(*args, **kargs):
             return await cls._create(*args, **kargs)
 
         @bp.get(url + '/<id>')
         @accept
         @webtoken
-        @acl('read', cls.__acl__)
+        @acl('read', cls.__acl__, cls)
         async def read(*args, **kargs):
             return await cls._read(*args, **kargs)
 
@@ -82,14 +82,14 @@ class JSONAPIMixin(object):
         @accept
         @cls._check_update
         @webtoken
-        @acl('update', cls.__acl__)
+        @acl('update', cls.__acl__, cls)
         async def update(*args, **kargs):
             return await cls._update(*args, **kargs)
 
         @bp.delete(url + '/<id>')
         @accept
         @webtoken
-        @acl('delete', cls.__acl__)
+        @acl('delete', cls.__acl__, cls)
         async def delete(*args, **kargs):
             return await cls._delete(*args, **kargs)
 

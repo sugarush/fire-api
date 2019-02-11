@@ -1,117 +1,120 @@
 from unittest import TestCase
+from sugar_asynctest import AsyncTestCase
 
 from sugar_api.acl import _check_acl, _check_action
 
-class ACLTest(TestCase):
+class ACLTest(AsyncTestCase):
 
-    def test_check_action_invalid(self):
+    default_loop = True
+
+    async def test_check_action_invalid(self):
 
         result = _check_action('action', [ ])
 
         self.assertFalse(result)
 
-    def test_check_action_valid(self):
+    async def test_check_action_valid(self):
 
         result = _check_action('action', [ 'action' ])
 
         self.assertTrue(result)
 
-    def test_check_action_all(self):
+    async def test_check_action_all(self):
 
         result = _check_action('action', [ 'all' ])
 
         self.assertTrue(result)
 
-    def test_check_acl_no_token_invalid(self):
+    async def test_check_acl_no_token_invalid(self):
 
-        result = _check_acl('action', {
+        result = await _check_acl('action', {
             'unauthorized': [ ]
-        }, None, None)
+        }, None, None, None)
 
         self.assertFalse(result)
 
-    def test_check_acl_no_token_valid(self):
+    async def test_check_acl_no_token_valid(self):
 
-        result = _check_acl('action', {
+        result = await _check_acl('action', {
             'unauthorized': ['action']
-        }, None, None)
+        }, None, None, None)
 
         self.assertTrue(result)
 
-    def test_check_acl_self_invalid(self):
+    async def test_check_acl_self_invalid(self):
 
-        result = _check_acl('action', {
+        result = await _check_acl('action', {
             'self': [ ]
         }, {
             'data': { 'id': 'aabbcc' }
-        }, 'aabbcc')
+        }, 'aabbcc', None)
 
         self.assertFalse(result)
 
-    def test_check_acl_self_valid(self):
+    async def test_check_acl_self_valid(self):
 
-        result = _check_acl('action', {
+        result = await _check_acl('action', {
             'self': ['action']
         }, {
             'data': { 'id': 'aabbcc' }
-        }, 'aabbcc')
+        }, 'aabbcc', None)
 
         self.assertTrue(result)
 
-    def test_check_acl_group_invalid(self):
+    async def test_check_acl_group_invalid(self):
 
-        result = _check_acl('action', {
+        result = await _check_acl('action', {
             'test_group': [ ]
         }, {
             'data': { 'type': 'test_group' }
-        }, None)
+        }, None, None)
 
         self.assertFalse(result)
 
-    def test_check_acl_group_valid(self):
+    async def test_check_acl_group_valid(self):
 
-        result = _check_acl('action', {
+        result = await _check_acl('action', {
             'test_group': ['action']
         }, {
             'data': { 'type': 'test_group' }
-        }, None)
+        }, None, None)
 
         self.assertTrue(result)
 
-    def test_check_acl_other_invalid(self):
+    async def test_check_acl_other_invalid(self):
 
-        result = _check_acl('action', {
+        result = await _check_acl('action', {
             'other': [ ]
-        }, { }, None)
+        }, { }, None, None)
 
         self.assertFalse(result)
 
-    def test_check_acl_other_valid(self):
+    async def test_check_acl_other_valid(self):
 
-        result = _check_acl('action', {
+        result = await _check_acl('action', {
             'other': ['action']
         }, {
             'data': { }
-        }, None)
+        }, None, None)
 
         self.assertTrue(result)
 
-    def test_check_acl_self_and_group(self):
+    async def test_check_acl_self_and_group(self):
 
-        result = _check_acl('action', {
+        result = await _check_acl('action', {
             'self': ['action'],
             'test_group': [ ]
         }, {
             'data': { 'type': 'test_group' }
-        }, None)
+        }, None, None)
 
         self.assertTrue(result)
 
-        result = _check_acl('action', {
+        result = await _check_acl('action', {
             'self': [ ],
             'test_group': ['action']
         }, {
             'data': { 'type': 'test_group' }
-        }, None)
+        }, None, None)
 
         self.assertTrue(result)
