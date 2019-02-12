@@ -1,5 +1,4 @@
 from . header import jsonapi
-
 from . error import Error
 
 
