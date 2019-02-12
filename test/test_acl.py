@@ -1,5 +1,6 @@
 from unittest import TestCase
 from sugar_asynctest import AsyncTestCase
+from sugar_odm import MemoryModel, Model, Field
 
 from sugar_api.acl import _check_acl, _check_action
 
@@ -118,3 +119,99 @@ class ACLTest(AsyncTestCase):
         }, None, None)
 
         self.assertTrue(result)
+
+    async def test_check_acl_field_invalid(self):
+
+        class Beta(MemoryModel):
+            pass
+
+        class Alpha(MemoryModel):
+            owner = Field()
+
+        beta = Beta()
+        await beta.save()
+
+        alpha = Alpha()
+        alpha.owner = 'invalid'
+        await alpha.save()
+
+        result = await _check_acl('action', {
+            '$owner': ['action']
+        }, {
+            'data': { 'id': beta.id }
+        }, alpha.id, Alpha)
+
+        self.assertFalse(result)
+
+    async def test_check_acl_field_valid(self):
+
+        class Beta(MemoryModel):
+            pass
+
+        class Alpha(MemoryModel):
+            owner = Field()
+
+        beta = Beta()
+        await beta.save()
+
+        alpha = Alpha()
+        alpha.owner = beta.id
+        await alpha.save()
+
+        result = await _check_acl('action', {
+            '$owner': ['action']
+        }, {
+            'data': { 'id': beta.id }
+        }, alpha.id, Alpha)
+
+        self.assertTrue(result)
+
+    async def test_check_acl_field_valid_nested(self):
+
+        class Gamma(Model):
+            owner = Field()
+
+        class Beta(MemoryModel):
+            pass
+
+        class Alpha(MemoryModel):
+            gamma = Field(type=Gamma)
+
+        beta = Beta()
+        await beta.save()
+
+        alpha = Alpha()
+        alpha.gamma = { 'owner': beta.id }
+        await alpha.save()
+
+        result = await _check_acl('action', {
+            '$gamma.owner': ['action']
+        }, {
+            'data': { 'id': beta.id }
+        }, alpha.id, Alpha)
+
+        self.assertTrue(result)
+
+    async def test_check_acl_field_self_skip(self):
+
+        class Beta(MemoryModel):
+            pass
+
+        class Alpha(MemoryModel):
+            owner = Field()
+
+        beta = Beta()
+        await beta.save()
+
+        alpha = Alpha()
+        alpha.owner = beta.id
+        await alpha.save()
+
+        result = await _check_acl('action', {
+            'self': [ ],
+            '$owner': ['action']
+        }, {
+            'data': { 'id': alpha.id }
+        }, alpha.id, Alpha)
+
+        self.assertFalse(result)
