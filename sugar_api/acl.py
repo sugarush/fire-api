@@ -72,16 +72,18 @@ async def _check_acl(action, acl, token, id, Model):
                 valid = True
 
         if not skip_user_group_field and (token_id or token_type):
-            skip_other = True
             # Check for self actions.
             if id == token_id:
                 # Skip checking fields if the document is self.
                 skip_user_group_field = True
+                # Skip checking other if document is self.
+                skip_other = True
                 if _check_action(action, acl.get('self', { })):
                     valid = True
 
             # Check for group actions.
-            if token_type:
+            if token_type in acl_copy:
+                skip_other = True
                 if _check_action(action, acl_copy.get(token_type, { })):
                     valid = True
 

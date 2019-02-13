@@ -100,6 +100,28 @@ class ACLTest(AsyncTestCase):
 
         self.assertTrue(result)
 
+    async def test_check_acl_other_skip_self(self):
+
+        result = await _check_acl('action', {
+            'self': [ ],
+            'other': ['action']
+        }, {
+            'data': { 'id': 'aabbcc' }
+        }, 'aabbcc', None)
+
+        self.assertFalse(result)
+
+    async def test_check_acl_other_skip_group(self):
+
+        result = await _check_acl('action', {
+            'group': [ ],
+            'other': ['action']
+        }, {
+            'data': { 'type': 'group' }
+        }, None, None)
+
+        self.assertFalse(result)
+
     async def test_check_acl_self_and_group(self):
 
         result = await _check_acl('action', {
