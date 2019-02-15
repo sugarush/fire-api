@@ -220,6 +220,48 @@ class JSONAPIMixinTest(AsyncTestCase):
 
         await Mixin.drop()
 
+    async def test_read_multiple_limit(self):
+
+        await Mixin.add([
+            { },
+            { },
+            { }
+        ])
+
+        response = await Mixin._read(Document({
+            'args': {
+                'page[limit]': 1
+            }
+        }))
+
+        response = decode(response)
+
+        self.assertEqual(len(response.data), 1)
+
+        await Mixin.drop()
+
+    async def test_read_multiple_offset(self):
+
+        await Mixin.add([
+            { 'field': '1' },
+            { 'field': '2' },
+            { 'field': '3'}
+        ])
+
+        response = await Mixin._read(Document({
+            'args': {
+                'page[limit]': 1,
+                'page[offset]': 1,
+                'sort': 'field'
+            }
+        }))
+
+        response = decode(response)
+
+        self.assertEqual(response.data[0].attributes.field, '2')
+
+        await Mixin.drop()
+
     async def test_read_multiple_no_data_found(self):
 
         response = await Mixin._read(Document({

@@ -378,14 +378,16 @@ class JSONAPIMixin(object):
                             result.append(1)
 
                         item = item.strip('-')
-
                         result.insert(0, item)
 
                         return result
 
                     sort = list(map(prepare, sort))
 
-                async for model in cls.find(query, sort=sort):
+                offset = int(request.args.get('page[offset]', 0))
+                limit = int(request.args.get('page[limit]', 100))
+
+                async for model in cls.find(query, sort=sort, skip=offset, limit=limit):
                     models.append(model)
 
             except Exception as e:
@@ -408,7 +410,12 @@ class JSONAPIMixin(object):
                 }, status=404)
 
             return jsonapi({
-                'data': list(map(lambda model: model._to_jsonapi(), models))
+                'data': list(map(lambda model: model._to_jsonapi(), models)),
+                'meta': {
+                    'offset': offset,
+                    'limit': limit,
+                    'count': await cls.count()
+                }
             }, status=200)
 
     @classmethod
