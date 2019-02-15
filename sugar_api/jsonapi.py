@@ -414,7 +414,7 @@ class JSONAPIMixin(object):
                 'meta': {
                     'offset': offset,
                     'limit': limit,
-                    'count': await cls.count()
+                    'total': await cls.count()
                 }
             }, status=200)
 
