@@ -10,7 +10,6 @@ from . header import content_type, accept, jsonapi
 from . webtoken import WebToken, webtoken
 
 
-
 class JSONAPIMixin(object):
 
     __acl__ = None
