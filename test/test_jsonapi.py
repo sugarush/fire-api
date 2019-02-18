@@ -516,7 +516,7 @@ class JSONAPIMixinTest(AsyncTestCase):
                     'id': 'alpha'
                 }
             }
-        }), 'alpha')
+        }), id='alpha')
 
         response = decode(response)
 

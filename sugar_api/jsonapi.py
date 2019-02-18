@@ -174,7 +174,7 @@ class JSONAPIMixin(object):
 
     @classmethod
     def _check_update(cls, handler):
-        async def decorator(request, id=None, *args, **kargs):
+        async def decorator(request, *args, **kargs):
 
             data = None
 
@@ -218,6 +218,7 @@ class JSONAPIMixin(object):
                 )
                 return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
+            id = kargs.get('id')
             _id = data.get('id')
 
             if not _id:
@@ -246,7 +247,7 @@ class JSONAPIMixin(object):
                 )
                 return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
-            return await handler(request, id, *args, **kargs)
+            return await handler(request, *args, **kargs)
 
         return decorator
 
