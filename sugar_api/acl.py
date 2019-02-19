@@ -62,7 +62,7 @@ async def _check_acl(action, acl, token, id, Model):
         data = (token or { }).get('data')
 
         token_id = (data or { }).get('id')
-        token_type = (data or { }).get('type')
+        token_groups = (data or { }).get('groups', [ ])
 
         # Check for unauthorized actions.
         if not isinstance(data, dict):
@@ -71,7 +71,7 @@ async def _check_acl(action, acl, token, id, Model):
             if _check_action(action, acl.get('unauthorized', { })):
                 valid = True
 
-        if not skip_user_group_field and (token_id or token_type):
+        if not skip_user_group_field and (token_id or token_groups):
             # Check for self actions.
             if id == token_id:
                 # Skip checking fields if the document is self.
@@ -82,10 +82,11 @@ async def _check_acl(action, acl, token, id, Model):
                     valid = True
 
             # Check for group actions.
-            if token_type in acl_copy:
-                skip_other = True
-                if _check_action(action, acl_copy.get(token_type, { })):
-                    valid = True
+            for group in token_groups:
+                if group in acl_copy:
+                    skip_other = True
+                    if _check_action(action, acl_copy.get(group, { })):
+                        valid = True
 
         # Check for field actions.
         if not skip_user_group_field and token_id:

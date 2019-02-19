@@ -67,7 +67,7 @@ class ACLTest(AsyncTestCase):
         result = await _check_acl('action', {
             'test_group': [ ]
         }, {
-            'data': { 'type': 'test_group' }
+            'data': { 'groups': [ 'test_group' ] }
         }, None, None)
 
         self.assertFalse(result)
@@ -77,7 +77,7 @@ class ACLTest(AsyncTestCase):
         result = await _check_acl('action', {
             'test_group': ['action']
         }, {
-            'data': { 'type': 'test_group' }
+            'data': { 'groups': [ 'test_group' ] }
         }, None, None)
 
         self.assertTrue(result)
@@ -114,10 +114,10 @@ class ACLTest(AsyncTestCase):
     async def test_check_acl_other_skip_group(self):
 
         result = await _check_acl('action', {
-            'group': [ ],
+            'test_group': [ ],
             'other': ['action']
         }, {
-            'data': { 'type': 'group' }
+            'data': { 'groups': [ 'test_group' ] }
         }, None, None)
 
         self.assertFalse(result)
@@ -128,7 +128,7 @@ class ACLTest(AsyncTestCase):
             'self': ['action'],
             'test_group': [ ]
         }, {
-            'data': { 'type': 'test_group' }
+            'data': { 'groups': [ 'test_group' ] }
         }, None, None)
 
         self.assertTrue(result)
@@ -137,7 +137,7 @@ class ACLTest(AsyncTestCase):
             'self': [ ],
             'test_group': ['action']
         }, {
-            'data': { 'type': 'test_group' }
+            'data': { 'groups': [ 'test_group' ] }
         }, None, None)
 
         self.assertTrue(result)
