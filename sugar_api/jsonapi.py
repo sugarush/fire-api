@@ -19,7 +19,7 @@ class JSONAPIMixin(object):
 
         data['type'] = self._table
         data['id'] = self.id
-        data['attributes'] = self.serialize(controllers=True)
+        data['attributes'] = self.serialize()
 
         return data
 
