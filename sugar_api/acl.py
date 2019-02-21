@@ -89,7 +89,7 @@ async def _check_acl(action, acl, token, id, Model):
                         valid = True
 
         # Check for field actions.
-        if not skip_user_group_field and token_id:
+        if not skip_user_group_field and token_id and id:
             if Model and await Model.exists(id):
                 model = await Model.find_by_id(id)
                 model_fields = _get_fields(model, fields)
