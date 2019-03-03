@@ -142,7 +142,7 @@ class ACLTest(AsyncTestCase):
 
         self.assertTrue(result)
 
-    async def test_check_acl_field_invalid(self):
+    async def test_check_acl_specific_invalid(self):
 
         class Beta(MemoryModel):
             pass
@@ -165,7 +165,7 @@ class ACLTest(AsyncTestCase):
 
         self.assertFalse(result)
 
-    async def test_check_acl_field_valid(self):
+    async def test_check_acl_specific_valid(self):
 
         class Beta(MemoryModel):
             pass
@@ -188,7 +188,7 @@ class ACLTest(AsyncTestCase):
 
         self.assertTrue(result)
 
-    async def test_check_acl_field_valid_nested(self):
+    async def test_check_acl_specific_valid_nested(self):
 
         class Gamma(Model):
             owner = Field()
@@ -214,7 +214,7 @@ class ACLTest(AsyncTestCase):
 
         self.assertTrue(result)
 
-    async def test_check_acl_field_self_skip(self):
+    async def test_check_acl_specific_self_skip(self):
 
         class Beta(MemoryModel):
             pass
@@ -232,6 +232,102 @@ class ACLTest(AsyncTestCase):
         result = await _check_acl('action', {
             'self': [ ],
             '$owner': ['action']
+        }, {
+            'data': { 'id': alpha.id }
+        }, alpha.id, Alpha)
+
+        self.assertFalse(result)
+
+    async def test_check_acl_grouped_invalid(self):
+
+        class Beta(MemoryModel):
+            pass
+
+        class Alpha(MemoryModel):
+            owners = Field(type=list)
+
+        beta = Beta()
+        await beta.save()
+
+        alpha = Alpha()
+        alpha.owners = [ 'invalid' ]
+        await alpha.save()
+
+        result = await _check_acl('action', {
+            '#owners': ['action']
+        }, {
+            'data': { 'id': beta.id }
+        }, alpha.id, Alpha)
+
+        self.assertFalse(result)
+
+    async def test_check_acl_grouped_valid(self):
+
+        class Beta(MemoryModel):
+            pass
+
+        class Alpha(MemoryModel):
+            owners = Field(type=list)
+
+        beta = Beta()
+        await beta.save()
+
+        alpha = Alpha()
+        alpha.owners = [ beta.id ]
+        await alpha.save()
+
+        result = await _check_acl('action', {
+            '#owners': ['action']
+        }, {
+            'data': { 'id': beta.id }
+        }, alpha.id, Alpha)
+
+        self.assertTrue(result)
+
+    async def test_check_acl_grouped_valid_nested(self):
+
+        class Gamma(Model):
+            owners = Field(type=list)
+
+        class Beta(MemoryModel):
+            pass
+
+        class Alpha(MemoryModel):
+            gamma = Field(type=Gamma)
+
+        beta = Beta()
+        await beta.save()
+
+        alpha = Alpha()
+        alpha.gamma = { 'owners': [ beta.id ] }
+        await alpha.save()
+
+        result = await _check_acl('action', {
+            '#gamma.owners': ['action']
+        }, {
+            'data': { 'id': beta.id }
+        }, alpha.id, Alpha)
+
+        self.assertTrue(result)
+
+    async def test_check_acl_grouped_self_skip(self):
+
+        class Beta(MemoryModel):
+            pass
+
+        class Alpha(MemoryModel):
+            owners = Field()
+
+        beta = Beta()
+        await beta.save()
+
+        alpha = Alpha()
+        alpha.owners = [ beta.id ]
+        await alpha.save()
+
+        result = await _check_acl('action', {
+            'self': [ ],
+            '#owner': ['action']
         }, {
             'data': { 'id': alpha.id }
         }, alpha.id, Alpha)

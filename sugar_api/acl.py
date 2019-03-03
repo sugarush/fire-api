@@ -50,10 +50,16 @@ async def _check_acl(action, acl, token, id, Model):
         except:
             pass
 
-        fields = list(filter(lambda field: \
+        specific = list(filter(lambda field: \
             field.startswith('$'), acl.keys()))
 
-        for field in fields:
+        for field in specific:
+            del acl_copy[field]
+
+        grouped = list(filter(lambda field: \
+            field.startswith('#'), acl.keys()))
+
+        for field in grouped:
             del acl_copy[field]
 
         skip_user_group_field = False
@@ -90,11 +96,19 @@ async def _check_acl(action, acl, token, id, Model):
 
         # Check for field actions.
         if not skip_user_group_field and token_id and id:
+
             if Model and await Model.exists(id):
                 model = await Model.find_by_id(id)
-                model_fields = _get_fields(model, fields)
-                for name, value in model_fields.items():
+
+                specific_fields = _get_fields(model, specific, '$')
+                for name, value in specific_fields.items():
                     if token_id == value:
+                        if _check_action(action, acl.get(name)):
+                            valid = True
+
+                grouped_fields = _get_fields(model, grouped, '#')
+                for name, value in grouped_fields.items():
+                    if token_id in value:
                         if _check_action(action, acl.get(name)):
                             valid = True
 
@@ -105,17 +119,17 @@ async def _check_acl(action, acl, token, id, Model):
 
     return valid
 
-def _get_field(model, field):
+def _get_field(model, field, prefix):
     data = model
-    field = field.lstrip('$')
+    field = field.lstrip(prefix)
     for key in field.split('.'):
         data = data.get(key)
         if not data:
             return None
     return data
 
-def _get_fields(model, fields):
+def _get_fields(model, fields, prefix):
     model_fields = { }
     for field in fields:
-        model_fields[field] = _get_field(model, field)
+        model_fields[field] = _get_field(model, field, prefix)
     return model_fields
