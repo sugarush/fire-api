@@ -2,13 +2,12 @@ from uuid import uuid4
 
 import jwt
 from sanic import Blueprint
-from sanic.response import text
 
 from sugar_odm import Model
 
-from . cors import CORS
 from . error import Error
 from . header import content_type, accept, jsonapi
+from . preflight import preflight
 
 
 __secret__ = str(uuid4())
@@ -107,7 +106,7 @@ class WebToken(object):
 
         @bp.options(url)
         async def options(*args, **kargs):
-            return await cls._preflight(*args, **kargs)
+            return preflight(methods=[ 'POST', 'PATCH' ])
 
         @bp.post(url)
         @content_type
@@ -116,15 +115,6 @@ class WebToken(object):
             return await cls._post(*args, **kargs)
 
         return bp
-
-    @classmethod
-    async def _preflight(request, *args, **kargs):
-        headers = {
-            'Access-Control-Allow-Origin': CORS.get_origins(),
-            'Access-Control-Allow-Methods': 'POST, PATCH',
-            'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type'
-        }
-        return text('', headers=headers)
 
     @classmethod
     async def _post(cls, request):

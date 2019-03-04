@@ -1,12 +1,11 @@
 import ujson
 
 from sanic import Blueprint
-from sanic.response import text
 
 from . acl import acl
-from . cors import CORS
 from . error import Error
 from . header import content_type, accept, jsonapi
+from . preflight import preflight
 from . webtoken import WebToken, webtoken
 
 
@@ -47,11 +46,11 @@ class JSONAPIMixin(object):
 
         @bp.options(url)
         async def options(*args, **kargs):
-            return await cls._preflight(*args, **kargs)
+            return preflight(methods=[ 'GET', 'POST' ])
 
         @bp.options(url + '/<id>')
         async def options(*args, **kargs):
-            return await cls._preflight_id(*args, **kargs)
+            return preflight(methods=[ 'GET', 'PATCH', 'DELETE' ])
 
         @bp.get(url)
         @accept
@@ -93,24 +92,6 @@ class JSONAPIMixin(object):
             return await cls._delete(*args, **kargs)
 
         return bp
-
-    @classmethod
-    async def _preflight(cls, request, *args, **kargs):
-        headers = {
-            'Access-Control-Allow-Origin': CORS.get_origins(),
-            'Access-Control-Allow-Methods': 'GET, POST',
-            'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type'
-        }
-        return text('', headers=headers)
-
-    @classmethod
-    async def _preflight_id(cls, request, *args, **kargs):
-        headers = {
-            'Access-Control-Allow-Origin': CORS.get_origins(),
-            'Access-Control-Allow-Methods': 'GET, PATCH, DELETE',
-            'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type'
-        }
-        return text('', headers=headers)
 
     @classmethod
     def _check_create(cls, handler):
