@@ -1,4 +1,3 @@
-from unittest import TestCase
 from sugar_asynctest import AsyncTestCase
 from sugar_odm import MemoryModel, Model, Field
 
