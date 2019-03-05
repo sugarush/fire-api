@@ -39,7 +39,7 @@ def scope(scope):
                     detail = 'No token provided.',
                     status = 403
                 )
-                return jsonapi({ errors: [ error.serialize() ] }, status=403)
+                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
             token_scope = token.get('scope')
 
@@ -49,7 +49,7 @@ def scope(scope):
                     detail = 'No scope provided.',
                     status = 403
                 )
-                return jsonapi({ errors: [ error.serialize() ] }, status=403)
+                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
             if not _check_scope(scope, token_scope, kargs):
                 error = Error(
@@ -57,7 +57,7 @@ def scope(scope):
                     detail = 'Invalid scope.',
                     status = 403
                 )
-                return jsonapi({ errors: [ error.serialize() ] }, status=403)
+                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
             return await handler(*args, **kargs)
         return decorator
