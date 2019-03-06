@@ -38,7 +38,7 @@ class ScopeTest(TestCase):
         result = _check_scope({
             'action': '$value'
         }, {
-            'value': 'aabbcc'
+            'action': 'aabbcc'
         }, {
             'value': 'aabbcc'
         })
@@ -50,7 +50,7 @@ class ScopeTest(TestCase):
         result = _check_scope({
             'action': '$value'
         }, {
-            'value': 'aabbcc',
+            'action': 'aabbcc',
         }, {
             'value': 'ddeeff'
         })
@@ -72,7 +72,7 @@ class ScopeTest(TestCase):
         result = _check_scope({
             'action': '$value'
         }, {
-            'value': 'aabbcc'
+            'action': 'aabbcc'
         }, { })
 
         self.assertFalse(result)
@@ -82,7 +82,7 @@ class ScopeTest(TestCase):
         result = _check_scope({
             'action': '#value'
         }, {
-            'value': [ 'aabbcc' ]
+            'action': [ 'aabbcc' ]
         }, {
             'value': 'aabbcc'
         })
@@ -94,7 +94,7 @@ class ScopeTest(TestCase):
         result = _check_scope({
             'action': '#value'
         }, {
-            'value': [ 'aabbcc' ]
+            'action': [ 'aabbcc' ]
         }, {
             'value': 'ddeeff'
         })
@@ -116,7 +116,7 @@ class ScopeTest(TestCase):
         result = _check_scope({
             'action': '#value'
         }, {
-            'value': [ 'aabbcc' ]
+            'action': [ 'aabbcc' ]
         }, { })
 
         self.assertFalse(result)

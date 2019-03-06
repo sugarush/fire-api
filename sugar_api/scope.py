@@ -5,7 +5,7 @@ def _check_scope(scope, token_scope, kargs):
         if isinstance(value, str):
             if value.startswith('$'):
                 _key = value.lstrip('$')
-                token_value = token_scope.get(_key)
+                token_value = token_scope.get(key)
                 karg_value = kargs.get(_key)
                 if not token_value or not karg_value:
                     return False
@@ -13,7 +13,7 @@ def _check_scope(scope, token_scope, kargs):
                     return False
             elif value.startswith('#'):
                 _key = value.lstrip('#')
-                token_value = token_scope.get(_key)
+                token_value = token_scope.get(key)
                 karg_value = kargs.get(_key)
                 if not token_value or not karg_value:
                     return False
