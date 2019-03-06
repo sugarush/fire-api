@@ -43,7 +43,17 @@ def scope(scope):
                 )
                 return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
-            token_scope = token.get('scope')
+            data = token.get('data')
+
+            if not data:
+                error = Error(
+                    title = 'Scope Error',
+                    detail = 'No data provided.',
+                    status = 403
+                )
+                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
+
+            token_scope = data.get('scope')
 
             if not token_scope:
                 error = Error(
