@@ -13,7 +13,7 @@ class JSONAPIMixin(object):
 
     __acl__ = None
 
-    def _to_jsonapi(self):
+    def to_jsonapi(self):
         data = { }
 
         data['type'] = self._table
@@ -23,7 +23,7 @@ class JSONAPIMixin(object):
         return data
 
     @classmethod
-    def _from_jsonapi(cls, data):
+    def from_jsonapi(cls, data):
         id = data.get('id')
         attributes = data.get('attributes')
 
@@ -241,7 +241,7 @@ class JSONAPIMixin(object):
         data = request.json.get('data')
 
         try:
-            model = cls._from_jsonapi(data)
+            model = cls.from_jsonapi(data)
 
         except Exception as e:
             error = Error(
@@ -283,7 +283,7 @@ class JSONAPIMixin(object):
             )
             return jsonapi({ 'errors': [ error.serialize() ] }, status=500)
 
-        return jsonapi({ 'data': model._to_jsonapi() }, status=201)
+        return jsonapi({ 'data': model.to_jsonapi() }, status=201)
 
     @classmethod
     async def _read(cls, request, id=None, token=None):
@@ -311,7 +311,7 @@ class JSONAPIMixin(object):
                     'errors': [ error.serialize() ]
                 }, status=404)
 
-            return jsonapi({ 'data': model._to_jsonapi() }, status=200)
+            return jsonapi({ 'data': model.to_jsonapi() }, status=200)
 
         else:
 
@@ -391,7 +391,7 @@ class JSONAPIMixin(object):
                 }, status=404)
 
             return jsonapi({
-                'data': list(map(lambda model: model._to_jsonapi(), models)),
+                'data': list(map(lambda model: model.to_jsonapi(), models)),
                 'meta': {
                     'offset': offset,
                     'limit': limit,
@@ -450,7 +450,7 @@ class JSONAPIMixin(object):
             )
             return jsonapi({ 'errors': [ error.serialize() ] }, status=500)
 
-        return jsonapi({ 'data': model._to_jsonapi() }, status=200)
+        return jsonapi({ 'data': model.to_jsonapi() }, status=200)
 
     @classmethod
     async def _delete(cls, request, id, token=None):
