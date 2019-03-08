@@ -1,26 +1,24 @@
 from . error import Error
 from . jsonapi import jsonapi
 
-
 def _check_scope(scope, token_scope, kargs):
     for (key, value) in scope.items():
-        if isinstance(value, str):
-            if value.startswith('$'):
-                _key = value.lstrip('$')
-                token_value = token_scope.get(key)
-                karg_value = kargs.get(_key)
-                if not token_value or not karg_value:
-                    return False
-                if not token_value == karg_value:
-                    return False
-            elif value.startswith('#'):
-                _key = value.lstrip('#')
-                token_value = token_scope.get(key)
-                karg_value = kargs.get(_key)
-                if not token_value or not karg_value:
-                    return False
-                if not karg_value in token_value:
-                    return False
+        if isinstance(value, str) and value.startswith('$'):
+            _key = value.lstrip('$')
+            token_value = token_scope.get(key)
+            karg_value = kargs.get(_key)
+            if not token_value or not karg_value:
+                return False
+            if not token_value == karg_value:
+                return False
+        elif isinstance(value, str) and value.startswith('#'):
+            _key = value.lstrip('#')
+            token_value = token_scope.get(key)
+            karg_value = kargs.get(_key)
+            if not token_value or not karg_value:
+                return False
+            if not karg_value in token_value:
+                return False
         else:
             _value = token_scope.get(key)
             if not _value:
