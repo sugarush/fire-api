@@ -3,4 +3,5 @@ from . cors import CORS
 from . error import Error
 from . header import accept, content_type, jsonapi
 from . jsonapi import JSONAPIMixin
+from . scope import scope
 from . webtoken import WebToken, webtoken
