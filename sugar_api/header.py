@@ -7,12 +7,12 @@ from . error import Error
 __content_type__ = 'application/vnd.api+json'
 
 def jsonapi(*args, **kargs):
-    kargs.update({
-        'headers': {
-            'Access-Control-Allow-Origin': CORS.get_origins(),
-            'Content-Type': __content_type__
-        }
+    headers = kargs.get('headers', { })
+    headers.update({
+        'Access-Control-Allow-Origin': CORS.get_origins(),
+        'Content-Type': __content_type__
     })
+    kargs['headers'] = headers
     return json(*args, **kargs)
 
 def content_type(handler):
