@@ -1,4 +1,5 @@
 from . error import Error
+from . header import jsonapi
 
 def _check_scope(scope, token_scope, kargs):
     for (key, value) in scope.items():
