@@ -1,4 +1,4 @@
-from sanic.response import json, text
+from sanic.response import json
 
 from . cors import CORS
 from . error import Error
