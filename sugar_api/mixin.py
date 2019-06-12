@@ -6,6 +6,7 @@ from . acl import acl
 from . error import Error
 from . header import content_type, accept, jsonapi
 from . preflight import preflight
+from . validate import validate
 from . webtoken import WebToken, webtoken
 
 
@@ -62,6 +63,7 @@ class JSONAPIMixin(object):
         @bp.post(url)
         @content_type
         @accept
+        @validate
         @cls._check_create
         @webtoken
         @acl('create', cls.__acl__, cls)
@@ -78,6 +80,7 @@ class JSONAPIMixin(object):
         @bp.patch(url + '/<id>')
         @content_type
         @accept
+        @validate
         @cls._check_update
         @webtoken
         @acl('update', cls.__acl__, cls)
@@ -97,29 +100,7 @@ class JSONAPIMixin(object):
     def _check_create(cls, handler):
         async def decorator(request, *args, **kargs):
 
-            data = None
-
-            if request.json:
-                data = request.json.get('data')
-
-            if not data:
-                error = Error(
-                    title = 'Create Error',
-                    detail = 'No data supplied.',
-                    status = 403
-                )
-                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
-
-            if not isinstance(data, dict):
-                error = Error(
-                    title = 'Create Error',
-                    detail = 'Data is not a JSON object.',
-                    links = {
-                        'about': 'https://jsonapi.org/format/#crud-creating'
-                    },
-                    status = 403
-                )
-                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
+            data = request.json.get('data')
 
             type = data.get('type')
 
@@ -139,16 +120,6 @@ class JSONAPIMixin(object):
                 )
                 return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
-            attributes = data.get('attributes')
-
-            if not attributes:
-                error = Error(
-                    title = 'Create Error',
-                    detail = 'No attributes supplied.',
-                    status = 403
-                )
-                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
-
             return await handler(request, *args, **kargs)
 
         return decorator
@@ -157,29 +128,7 @@ class JSONAPIMixin(object):
     def _check_update(cls, handler):
         async def decorator(request, *args, **kargs):
 
-            data = None
-
-            if request.json:
-                data = request.json.get('data')
-
-            if not data:
-                error = Error(
-                    title = 'Update Error',
-                    detail = 'No data provided.',
-                    status = 403
-                )
-                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
-
-            if not isinstance(data, dict):
-                error = Error(
-                    title = 'Update Error',
-                    detail = 'Invalid data attribute.',
-                    links = {
-                        'about': 'https://jsonapi.org/format/#crud-creating'
-                    },
-                    status = 403
-                )
-                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
+            data = request.json.get('data')
 
             type = data.get('type')
 
@@ -214,16 +163,6 @@ class JSONAPIMixin(object):
                 error = Error(
                     title = 'Update Error',
                     detail = 'ID provided does not match ID in the URL.',
-                    status = 403
-                )
-                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
-
-            attributes = data.get('attributes')
-
-            if not attributes:
-                error = Error(
-                    title = 'Update Error',
-                    detail = 'No attributes provided.',
                     status = 403
                 )
                 return jsonapi({ 'errors': [ error.serialize() ] }, status=403)

@@ -19,46 +19,6 @@ class JSONAPIMixinTest(AsyncTestCase):
 
     default_loop = True
 
-    async def test_create_data_missing(self):
-
-        #response = await Mixin._create(Document({
-        #    'json': { }
-        #}))
-
-        decorator = Mixin._check_create(None)
-
-        response = await decorator(Document({
-            'json': { }
-        }))
-
-        response = decode(response)
-
-        self.assertEqual(response.errors[0].detail, 'No data supplied.')
-
-        await Mixin.drop()
-
-    async def test_create_data_not_a_dict(self):
-
-        #response = await Mixin._create(Document({
-        #    'json': {
-        #        'data': 'invalid'
-        #    }
-        #}))
-
-        decorator = Mixin._check_create(None)
-
-        response = await decorator(Document({
-            'json': {
-                'data': 'invalid'
-            }
-        }))
-
-        response = decode(response)
-
-        self.assertEqual(response.errors[0].detail, 'Data is not a JSON object.')
-
-        await Mixin.drop()
-
     async def test_create_type_missing(self):
 
         #response = await Mixin._create(Document({
@@ -108,32 +68,6 @@ class JSONAPIMixinTest(AsyncTestCase):
         response = decode(response)
 
         self.assertEqual(response.errors[0].detail, 'Provided type does not match resource type.')
-
-        await Mixin.drop()
-
-    async def test_create_attributes_missing(self):
-
-        #response = await Mixin._create(Document({
-        #    'json': {
-        #        'data': {
-        #            'type': 'mixins'
-        #        }
-        #    }
-        #}))
-
-        decorator = Mixin._check_create(None)
-
-        response = await decorator(Document({
-            'json': {
-                'data': {
-                    'type': 'mixins'
-                }
-            }
-        }))
-
-        response = decode(response)
-
-        self.assertEqual(response.errors[0].detail, 'No attributes supplied.')
 
         await Mixin.drop()
 
@@ -362,42 +296,6 @@ class JSONAPIMixinTest(AsyncTestCase):
 
         await Mixin.drop()
 
-    async def test_update_data_missing(self):
-
-        #response = await Mixin._update(Document({
-        #    'json': { }
-        #}))
-
-        decorator = Mixin._check_update(None)
-
-        response = await decorator(Document({
-            'json': { }
-        }))
-
-        response = decode(response)
-
-        self.assertEqual(response.errors[0].detail, 'No data provided.')
-
-    async def test_update_data_not_a_dict(self):
-
-        #response = await Mixin._update(Document({
-        #    'json': {
-        #        'data': 'invalid'
-        #    }
-        #}))
-
-        decorator = Mixin._check_update(None)
-
-        response = await decorator(Document({
-            'json': {
-                'data': 'invalid'
-            }
-        }))
-
-        response = decode(response)
-
-        self.assertEqual(response.errors[0].detail, 'Invalid data attribute.')
-
     async def test_update_type_missing(self):
 
         #response = await Mixin._update(Document({
@@ -495,32 +393,6 @@ class JSONAPIMixinTest(AsyncTestCase):
         response = decode(response)
 
         self.assertEqual(response.errors[0].detail, 'ID provided does not match ID in the URL.')
-
-    async def test_update_attributes_missing(self):
-
-        #response = await Mixin._update(Document({
-        #    'json': {
-        #        'data': {
-        #            'type': 'mixins',
-        #            'id': 'alpha'
-        #        }
-        #    }
-        #}), 'alpha')
-
-        decorator = Mixin._check_update(None)
-
-        response = await decorator(Document({
-            'json': {
-                'data': {
-                    'type': 'mixins',
-                    'id': 'alpha'
-                }
-            }
-        }), id='alpha')
-
-        response = decode(response)
-
-        self.assertEqual(response.errors[0].detail, 'No attributes provided.')
 
     async def test_delete_id_missing(self):
 
