@@ -64,7 +64,7 @@ def webtoken(handler):
 class WebToken(object):
 
     @classmethod
-    async def payload(cls, username, password):
+    async def payload(cls, attributes):
         raise NotImplementedError('WebToken.payload not implemented.')
 
     @classmethod
