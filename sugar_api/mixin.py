@@ -76,7 +76,7 @@ class JSONAPIMixin(object):
             return await cls._create(*args, **kargs)
 
         @bp.get(url + '/<id>')
-        @objectid
+        @objectid('id')
         @accept
         @webtoken
         @rate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
@@ -85,7 +85,7 @@ class JSONAPIMixin(object):
             return await cls._read(*args, **kargs)
 
         @bp.patch(url + '/<id>')
-        @objectid
+        @objectid('id')
         @content_type
         @accept
         @validate
@@ -97,7 +97,7 @@ class JSONAPIMixin(object):
             return await cls._update(*args, **kargs)
 
         @bp.delete(url + '/<id>')
-        @objectid
+        @objectid('id')
         @accept
         @webtoken
         @rate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
