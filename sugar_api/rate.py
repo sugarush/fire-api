@@ -23,39 +23,13 @@ def rate(limit, interval, namespace=None):
             if interval is 'none':
                 return await handler(request, *args, **kargs)
 
-            token = kargs.get('token')
-
-            if not token:
-                error = Error(
-                    title = 'Rate Limit Error',
-                    detail = 'No token provided.',
-                    status = 403
-                )
-                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
-
-            data = token.get('data')
-
-            if not data:
-                error = Error(
-                    title = 'Rate Limit Error',
-                    detail = 'Token contains no data attribute.',
-                    status = 403
-                )
-                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
-
+            token = kargs.get('token', { })
+            data = token.get('data', { })
             id = data.get('id')
-
-            if not id:
-                error = Error(
-                    title = 'Rate Limit Error',
-                    detail = 'Data attribute does not contain an id attribute.',
-                    status = 403
-                )
-                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
             redis = await Redis.connect()
 
-            key = f'{id}:{namespace or request.path}'
+            key = f'{id or request.ip}:{namespace or request.path}'
 
             count = await redis.get(key) or 0
 
