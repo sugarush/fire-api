@@ -1,9 +1,6 @@
-from datetime import timedelta
-
+from . header import jsonapi
+from . error import Error
 from . redis import Redis
-
-from .. header import jsonapi
-from .. error import Error
 
 
 __intervals__ = {
@@ -15,7 +12,7 @@ __intervals__ = {
 }
 
 
-def rate(limit, interval):
+def rate(limit, interval, namespace=None):
     if not interval in __intervals__:
         raise Exception(
             f'ratelimit: {interval} not in {", ".join(__intervals__.keys())}'
@@ -54,7 +51,7 @@ def rate(limit, interval):
 
             redis = await Redis.connect()
 
-            key = f'{id}:{request.path}'
+            key = f'{id}:{namespace or request.path}'
 
             count = await redis.get(key) or 0
 
