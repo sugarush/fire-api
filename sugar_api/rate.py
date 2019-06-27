@@ -9,14 +9,16 @@ __intervals__ = {
     'minutely': 60,
     'hourly': 3600,
     'daily': 86400,
-    'weekly': 604800
+    'weekly': 604800,
+    'monthly': 2419200,
+    'yearly': 31449600
 }
 
 
 def rate(limit, interval, namespace=None):
     if not interval in __intervals__:
         raise Exception(
-            f'ratelimit: {interval} not in {", ".join(__intervals__.keys())}'
+            f'ratelimit: {interval} not in {list(__intervals__.keys())}'
         )
     def wrapper(handler):
         async def decorator(request, *args, **kargs):
