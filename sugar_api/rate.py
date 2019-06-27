@@ -58,7 +58,7 @@ def rate(limit, interval, namespace=None):
             if int(count) >= limit:
                 error = Error(
                     title = 'Rate Limit Error',
-                    detail = 'Rate limit exceeded.',
+                    detail = f'Rate limit exceeded: {limit} {interval}',
                     status = 403
                 )
                 return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
