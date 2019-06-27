@@ -8,6 +8,7 @@ from sugar_odm import Model
 from . error import Error
 from . header import content_type, accept, jsonapi
 from . preflight import preflight
+from . validate import validate
 
 
 __secret__ = str(uuid4())
@@ -111,6 +112,7 @@ class WebToken(object):
         @bp.post(url)
         @content_type
         @accept
+        @validate
         async def post(*args, **kargs):
             return await cls._post(*args, **kargs)
 
@@ -118,75 +120,12 @@ class WebToken(object):
 
     @classmethod
     async def _post(cls, request):
-        data = None
 
-        if request.json:
-            data = request.json.get('data')
-
-        if not data:
-            error = Error(
-                title = 'Create Token Error',
-                detail = 'No data provided.',
-                status = 403
-            )
-            return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
-
-        if not isinstance(data, dict):
-            error = Error(
-                title = 'Create Token Error',
-                detail = 'Data is not a JSON object.',
-                status = 403
-            )
-            return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
-
+        data = request.json.get('data')
         attributes = data.get('attributes')
 
-        if not attributes:
-            error = Error(
-                title = 'Create Token Error',
-                detail = 'No attributes provided.',
-                status = 403
-            )
-
-            return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
-
-        if not isinstance(attributes, dict):
-            error = Error(
-                title = 'Create Token Error',
-                detail = 'Attributes is not a JSON object.',
-                status = 403
-            )
-
-            return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
-
-        username = attributes.get('username')
-
-        if not username:
-            message = 'Missing username.'.format(
-                username = username
-            )
-            error = Error(
-                title = 'Create Token Error',
-                detail = message,
-                status = 403
-            )
-            return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
-
-        password = attributes.get('password')
-
-        if not password:
-            message = 'Missing password.'.format(
-                password = password
-            )
-            error = Error(
-                title = 'Create Token Error',
-                detail = message,
-                status = 403
-            )
-            return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
-
         try:
-            payload = await cls.payload(username, password)
+            payload = await cls.payload(attributes)
         except Exception as e:
             error = Error(
                 title = 'Create Token Error',
@@ -196,4 +135,9 @@ class WebToken(object):
             return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
         token = jwt.encode(payload, __secret__, algorithm=__algorithm__)
-        return jsonapi({ 'data': { 'attributes': { 'token': token } } }, status=200)
+
+        return jsonapi({
+            'data': {
+                'attributes': { 'token': token }
+            }
+        }, status=200)
