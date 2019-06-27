@@ -1,6 +1,7 @@
 from bson import ObjectId
 from bson.objectid import InvalidId
 
+from . header import jsonapi
 from . error import Error
 
 
