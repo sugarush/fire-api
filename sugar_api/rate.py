@@ -55,7 +55,7 @@ def rate(limit, interval, namespace=None):
 
             count = await redis.get(key) or 0
 
-            if count >= limit:
+            if int(count) >= limit:
                 error = Error(
                     title = 'Rate Limit Error',
                     detail = 'Rate limit exceeded.',
