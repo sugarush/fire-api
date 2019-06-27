@@ -331,8 +331,7 @@ class JSONAPIMixin(object):
                     count += 1
 
                 if limit < 0:
-                    async for model in cls.find(query, sort=sort):
-                        offset = 0
+                    async for model in cls.find(query, sort=sort, skip=offset):
                         models.append(model)
                 else:
                     async for model in cls.find(query, sort=sort, skip=offset, limit=limit):
