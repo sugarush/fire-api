@@ -3,6 +3,7 @@ from . cors import CORS
 from . error import Error
 from . header import accept, content_type, jsonapi
 from . mixin import JSONAPIMixin
+from . objectid import objectid
 from . rate import rate
 from . redis import Redis
 from . scope import scope

@@ -5,6 +5,7 @@ from sanic import Blueprint
 from . acl import acl
 from . error import Error
 from . header import content_type, accept, jsonapi
+from . objectid import objectid
 from . preflight import preflight
 from . rate import rate
 from . validate import validate
