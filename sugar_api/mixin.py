@@ -6,6 +6,7 @@ from . acl import acl
 from . error import Error
 from . header import content_type, accept, jsonapi
 from . preflight import preflight
+from . rate import rate
 from . validate import validate
 from . webtoken import WebToken, webtoken
 
@@ -56,6 +57,7 @@ class JSONAPIMixin(object):
         @bp.get(url)
         @accept
         @webtoken
+        @rate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @acl('read_all', cls.__acl__, cls)
         async def read(*args, **kargs):
             return await cls._read(*args, **kargs)
@@ -66,6 +68,7 @@ class JSONAPIMixin(object):
         @validate
         @cls._check_create
         @webtoken
+        @rate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @acl('create', cls.__acl__, cls)
         async def create(*args, **kargs):
             return await cls._create(*args, **kargs)
@@ -73,6 +76,7 @@ class JSONAPIMixin(object):
         @bp.get(url + '/<id>')
         @accept
         @webtoken
+        @rate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @acl('read', cls.__acl__, cls)
         async def read(*args, **kargs):
             return await cls._read(*args, **kargs)
@@ -83,6 +87,7 @@ class JSONAPIMixin(object):
         @validate
         @cls._check_update
         @webtoken
+        @rate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @acl('update', cls.__acl__, cls)
         async def update(*args, **kargs):
             return await cls._update(*args, **kargs)
@@ -90,6 +95,7 @@ class JSONAPIMixin(object):
         @bp.delete(url + '/<id>')
         @accept
         @webtoken
+        @rate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @acl('delete', cls.__acl__, cls)
         async def delete(*args, **kargs):
             return await cls._delete(*args, **kargs)

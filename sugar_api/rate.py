@@ -19,6 +19,9 @@ def rate(limit, interval, namespace=None):
         )
     def wrapper(handler):
         async def decorator(request, *args, **kargs):
+            if interval is 'none':
+                return handler(request, *args, **kargs)
+
             token = kargs.get('token')
 
             if not token:
