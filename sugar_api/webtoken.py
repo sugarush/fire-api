@@ -24,8 +24,6 @@ __options__ = {
 def webtoken(handler):
     async def decorator(request, *args, **kargs):
         authorization = request.headers.get('Authorization')
-        if not authorization:
-            authorization = request.headers.get('authorization')
         if authorization:
             authorization = authorization.split(' ')
             if not len(authorization) == 2:
