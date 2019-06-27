@@ -9,7 +9,7 @@ setup(
     author_email='lucifer.avada@gmail.com',
     url='https://github.com/sugarush/sugar-api',
     packages=[
-        'sugar_api',
+        'sugar_api'
     ],
     description='A Sanic JSONAPI implementation.',
     install_requires=[
