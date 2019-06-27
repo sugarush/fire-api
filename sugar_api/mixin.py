@@ -26,6 +26,14 @@ class JSONAPIMixin(object):
 
         return data
 
+    def render(self):
+        data = self.to_jsonapi()
+
+        if hasattr(self, 'on_render'):
+            data = self.on_render(data)
+
+        return data
+
     @classmethod
     def from_jsonapi(cls, data):
         id = data.get('id')
@@ -233,7 +241,7 @@ class JSONAPIMixin(object):
             )
             return jsonapi({ 'errors': [ error.serialize() ] }, status=500)
 
-        return jsonapi({ 'data': model.to_jsonapi() }, status=201)
+        return jsonapi({ 'data': model.render() }, status=201)
 
     @classmethod
     async def _read(cls, request, id=None, token=None):
@@ -261,7 +269,7 @@ class JSONAPIMixin(object):
                     'errors': [ error.serialize() ]
                 }, status=404)
 
-            return jsonapi({ 'data': model.to_jsonapi() }, status=200)
+            return jsonapi({ 'data': model.render() }, status=200)
 
         else:
 
@@ -341,7 +349,7 @@ class JSONAPIMixin(object):
                 }, status=404)
 
             return jsonapi({
-                'data': list(map(lambda model: model.to_jsonapi(), models)),
+                'data': list(map(lambda model: model.render(), models)),
                 'meta': {
                     'offset': offset,
                     'limit': limit,
@@ -400,7 +408,7 @@ class JSONAPIMixin(object):
             )
             return jsonapi({ 'errors': [ error.serialize() ] }, status=500)
 
-        return jsonapi({ 'data': model.to_jsonapi() }, status=200)
+        return jsonapi({ 'data': model.render() }, status=200)
 
     @classmethod
     async def _delete(cls, request, id, token=None):
