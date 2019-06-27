@@ -14,6 +14,7 @@ from . webtoken import WebToken, webtoken
 class JSONAPIMixin(object):
 
     __acl__ = None
+    __rate__ = (0, 'none')
 
     def to_jsonapi(self):
         data = { }

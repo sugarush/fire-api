@@ -4,6 +4,7 @@ from . redis import Redis
 
 
 __intervals__ = {
+    'none': 0,
     'secondly': 1,
     'minutely': 60,
     'hourly': 3600,
