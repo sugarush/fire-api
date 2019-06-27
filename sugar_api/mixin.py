@@ -325,6 +325,10 @@ class JSONAPIMixin(object):
 
                 offset = int(request.args.get('page[offset]', 0))
                 limit = int(request.args.get('page[limit]', 100))
+                count = 0
+
+                async for model in cls.find(query):
+                    count += 1
 
                 async for model in cls.find(query, sort=sort, skip=offset, limit=limit):
                     models.append(model)
@@ -353,7 +357,7 @@ class JSONAPIMixin(object):
                 'meta': {
                     'offset': offset,
                     'limit': limit,
-                    'total': await cls.count()
+                    'total': count
                 }
             }, status=200)
 
