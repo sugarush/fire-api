@@ -28,11 +28,11 @@ class JSONAPIMixin(object):
 
         return data
 
-    def render(self):
+    def render(self, token):
         data = self.to_jsonapi()
 
         if hasattr(self, 'on_render'):
-            data = self.on_render(data)
+            data = self.on_render(data, token)
 
         return data
 
@@ -195,7 +195,7 @@ class JSONAPIMixin(object):
         return decorator
 
     @classmethod
-    async def _create(cls, request, token=None):
+    async def _create(cls, request, token=None, errors=[ ]):
 
         # XXX: The request has already been verified
         # XXX: in the decorator cls._check_create.
@@ -245,10 +245,18 @@ class JSONAPIMixin(object):
             )
             return jsonapi({ 'errors': [ error.serialize() ] }, status=500)
 
-        return jsonapi({ 'data': model.render() }, status=201)
+        response = {
+            'data': model.render(token)
+        }
+
+        if errors:
+            response['errors'] = list(map(lambda error: \
+                error.serialize(), errors))
+
+        return jsonapi(response, status=201)
 
     @classmethod
-    async def _read(cls, request, id=None, token=None):
+    async def _read(cls, request, id=None, token=None, errors=[ ]):
         if id:
 
             try:
@@ -273,7 +281,7 @@ class JSONAPIMixin(object):
                     'errors': [ error.serialize() ]
                 }, status=404)
 
-            return jsonapi({ 'data': model.render() }, status=200)
+            return jsonapi({ 'data': model.render(token) }, status=200)
 
         else:
 
@@ -360,17 +368,23 @@ class JSONAPIMixin(object):
                     'errors': [ error.serialize() ]
                 }, status=404)
 
-            return jsonapi({
-                'data': list(map(lambda model: model.render(), models)),
+            response = {
+                'data': list(map(lambda model: model.render(token), models)),
                 'meta': {
                     'offset': offset,
                     'limit': limit,
                     'total': count
                 }
-            }, status=200)
+            }
+
+            if errors:
+                response['errors'] = list(map(lambda error: \
+                    error.serialize(), errors))
+
+            return jsonapi(response, status=200)
 
     @classmethod
-    async def _update(cls, request, id=None, token=None):
+    async def _update(cls, request, id=None, token=None, errors=[ ]):
 
         # XXX: The request has already been verified
         # XXX: in the decorator cls._check_update.
@@ -420,10 +434,18 @@ class JSONAPIMixin(object):
             )
             return jsonapi({ 'errors': [ error.serialize() ] }, status=500)
 
-        return jsonapi({ 'data': model.render() }, status=200)
+        response = {
+            'data': model.render(token)
+        }
+
+        if errors:
+            response['errors'] = list(map(lambda error: \
+                error.serialize(), errors))
+
+        return jsonapi(response, status=200)
 
     @classmethod
-    async def _delete(cls, request, id, token=None):
+    async def _delete(cls, request, id, token=None, errors=[ ]):
 
         try:
             model = await cls.find_by_id(id)
@@ -447,4 +469,10 @@ class JSONAPIMixin(object):
             )
             return jsonapi({ 'errors': [ error.serialize() ] }, status=500)
 
-        return jsonapi({ }, status=200)
+        response = { }
+
+        if errors:
+            response['errors'] = list(map(lambda error: \
+                error.serialize(), errors))
+
+        return jsonapi(response, status=200)
