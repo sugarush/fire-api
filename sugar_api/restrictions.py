@@ -14,12 +14,13 @@ def restrictions(restrictions):
             token = kargs.get('token')
 
             if not token:
-                error = Error(
-                    title = 'Restrictions Error',
-                    detail = 'No token provided',
-                    status = 403
-                )
-                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
+
+                token = {
+                    'data': {
+                        'id': 'unauthorized',
+                        'groups': ['unauthorized']
+                    }
+                }
 
             token_data = token.get('data')
 
