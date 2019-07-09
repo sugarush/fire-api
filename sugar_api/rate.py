@@ -27,11 +27,8 @@ def rate(limit, interval, namespace=None):
 
             token = kargs.get('token')
 
-            try:
-                data = token.get('data', { })
-                id = data.get('id')
-            except:
-                pass
+            data = (token or { }).get('data', { })
+            id = data.get('id')
 
             redis = await Redis.connect()
 
