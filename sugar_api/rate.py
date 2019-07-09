@@ -25,9 +25,13 @@ def rate(limit, interval, namespace=None):
             if interval is 'none':
                 return await handler(request, *args, **kargs)
 
-            token = kargs.get('token', { })
-            data = token.get('data', { })
-            id = data.get('id')
+            token = kargs.get('token')
+
+            try:
+                data = token.get('data', { })
+                id = data.get('id')
+            except:
+                pass
 
             redis = await Redis.connect()
 
