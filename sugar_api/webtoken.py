@@ -55,6 +55,8 @@ def webtoken(handler):
                     status = 403
                 )
                 return json({ 'errors': [ error.serialize() ] }, status=403)
+        else:
+            kargs['token'] = None
         return await handler(request, *args, **kargs)
     return decorator
 
