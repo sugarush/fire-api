@@ -51,12 +51,10 @@ def webtoken(handler):
             else:
                 error = Error(
                     title = 'Invalid Authorization Header',
-                    detail = 'The Authorization header is invalid.',
+                    detail = 'The authorization header is invalid.',
                     status = 403
                 )
                 return json({ 'errors': [ error.serialize() ] }, status=403)
-        else:
-            kargs['token'] = None
         return await handler(request, *args, **kargs)
     return decorator
 
