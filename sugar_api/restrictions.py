@@ -3,7 +3,7 @@ from copy import copy
 from . header import jsonapi
 from . error import Error
 
-def restrictions(restrictions):
+def set(restrictions):
     def wrapper(handler):
         async def decorator(request, *args, **kargs):
             if not restrictions:

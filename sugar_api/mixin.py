@@ -8,7 +8,7 @@ from . header import content_type, accept, jsonapi
 from . objectid import objectid
 from . preflight import preflight
 from . rate import rate
-from . restrictions import restrictions
+from . restrictions import set
 from . validate import validate
 from . webtoken import WebToken, webtoken
 
@@ -17,7 +17,7 @@ class JSONAPIMixin(object):
 
     __rate__ = (0, 'none')
     __acl__ = None
-    __restrictions__ = None
+    __set__ = None
 
     def to_jsonapi(self):
         data = { }
@@ -82,7 +82,7 @@ class JSONAPIMixin(object):
         @webtoken
         @rate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @acl('create', cls.__acl__, cls)
-        @restrictions(cls.__restrictions__)
+        @set(cls.__set__)
         async def create(*args, **kargs):
             return await cls._create(*args, **kargs)
 
@@ -104,7 +104,7 @@ class JSONAPIMixin(object):
         @webtoken
         @rate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @acl('update', cls.__acl__, cls)
-        @restrictions(cls.__restrictions__)
+        @set(cls.__set__)
         async def update(*args, **kargs):
             return await cls._update(*args, **kargs)
 
