@@ -8,7 +8,7 @@ from . header import content_type, accept, jsonapi
 from . objectid import objectid
 from . preflight import preflight
 from . rate import rate
-from . restrictions import set
+from . restrictions import set, _apply_restrictions
 from . validate import validate
 from . webtoken import WebToken, webtoken
 
@@ -17,6 +17,7 @@ class JSONAPIMixin(object):
 
     __rate__ = (0, 'none')
     __acl__ = None
+    __get__ = None
     __set__ = None
 
     def to_jsonapi(self):
@@ -33,6 +34,15 @@ class JSONAPIMixin(object):
 
         if hasattr(self, 'on_render'):
             data = self.on_render(data, token)
+
+        if self.__get__:
+
+            token_data = (token or { }).get('data', { })
+            groups = token_data.get('groups', [ ])
+
+            attributes = data.get('attributes', { })
+
+            _apply_restrictions(attributes, self.__get__, groups, [ ], [ ])
 
         return data
 
@@ -281,7 +291,15 @@ class JSONAPIMixin(object):
                     'errors': [ error.serialize() ]
                 }, status=404)
 
-            return jsonapi({ 'data': model.render(token) }, status=200)
+            response = {
+                'data': model.render(token)
+            }
+
+            if errors:
+                response['errors'] = list(map(lambda error: \
+                    error.serialize(), errors))
+
+            return jsonapi(response, status=200)
 
         else:
 
