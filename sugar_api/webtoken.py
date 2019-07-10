@@ -38,6 +38,13 @@ def webtoken(handler):
                         algorithms=[__algorithm__],
                         options=__options__
                     )
+                except jwt.ExpiredSignatureError:
+                    error = Error(
+                        title = 'Invalid Token Error',
+                        detail = 'The token has expired.',
+                        status = 403
+                    )
+                    return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
                 except Exception as e:
                     error = Error(
                         title = 'Invalid Authorization Header',
