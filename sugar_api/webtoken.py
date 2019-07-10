@@ -55,7 +55,7 @@ def webtoken(handler):
                 except Exception as e:
                     error = Error(
                         title = 'Invalid Authorization Header',
-                        detail = 'Failed to decode the token.',
+                        detail = str(e),
                         status = 403
                     )
                     return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
