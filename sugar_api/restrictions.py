@@ -26,7 +26,7 @@ def set(restrictions):
 
             if not token_data:
                 error = Error(
-                    title = 'Restrictions Error',
+                    title = 'Set Error',
                     detail = 'Token does not contain a data attribute.',
                     status = 403
                 )
@@ -36,7 +36,7 @@ def set(restrictions):
 
             if not token_id:
                 error = Error(
-                    title = 'Restrictions Error',
+                    title = 'Set Error',
                     detail = 'Token data does not contain an ID attribute.',
                     status = 403
                 )
@@ -46,7 +46,7 @@ def set(restrictions):
 
             if not token_groups:
                 error = Error(
-                    title = 'Restrictions Error',
+                    title = 'Set Error',
                     detail = 'Token data does not contain a groups attribute.',
                     status = 403
                 )
@@ -54,7 +54,7 @@ def set(restrictions):
 
             if not isinstance(token_groups, list):
                 error = Error(
-                    title = 'Restrictions Error',
+                    title = 'Set Error',
                     detail = 'Token data groups attribute is not a list.',
                     status = 403
                 )
@@ -87,9 +87,12 @@ def _apply_restrictions(attributes, restrictions, groups, errors, path):
             if not _contains_any(groups, allowed_groups):
                 if attributes.get(key):
                     del attributes[key]
+                    attribute = f'.{key}'
+                    if path:
+                        attribute = f'.{".".join(path)}{attribute}'
                     error = Error(
-                        title = 'Restrictions Error',
-                        detail = f'Cannot set attribute: {".".join(path)}.{key}.',
+                        title = 'Set Error',
+                        detail = f'Cannot set attribute: {attribute}',
                         status = 403
                     )
                     errors.append(error)
