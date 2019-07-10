@@ -33,6 +33,8 @@ class JSONAPIMixin(object):
     def render(self, token):
         data = self.to_jsonapi()
 
+        del data['attributes']['_id']
+
         if hasattr(self, 'on_render'):
             data = self.on_render(data, token)
 
@@ -47,7 +49,7 @@ class JSONAPIMixin(object):
                     }
                 }
 
-            token_data = (token).get('data', { })
+            token_data = token.get('data', { })
             token_id = token_data.get('id')
             token_groups = token_data.get('groups')
 
