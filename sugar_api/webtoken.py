@@ -45,6 +45,13 @@ def webtoken(handler):
                         status = 403
                     )
                     return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
+                except jwt.ImmatureSignatureError:
+                    error = Error(
+                        title = 'Invalid Token Error',
+                        detail = 'The token is not yet valid.',
+                        status = 403
+                    )
+                    return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
                 except Exception as e:
                     error = Error(
                         title = 'Invalid Authorization Header',
