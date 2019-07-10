@@ -1,4 +1,5 @@
 import ujson
+from copy import copy
 
 from sanic import Blueprint
 
@@ -37,10 +38,25 @@ class JSONAPIMixin(object):
 
         if self.__get__:
 
-            token_data = (token or { }).get('data', { })
-            groups = token_data.get('groups', [ ])
+            if not token:
 
-            attributes = data.get('attributes', { })
+                token = {
+                    'data': {
+                        'id': 'unauthorized',
+                        'groups': ['unauthorized']
+                    }
+                }
+
+            token_data = (token).get('data', { })
+            token_id = token_data.get('id')
+            token_groups = token_data.get('groups')
+
+            attributes = data.get('attributes')
+
+            groups = copy(token_groups)
+
+            if self.id == token_id:
+                groups.append('self')
 
             _apply_restrictions(attributes, self.__get__, groups, [ ], [ ])
 
