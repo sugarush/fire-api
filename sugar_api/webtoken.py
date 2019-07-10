@@ -30,7 +30,7 @@ def webtoken(handler):
                     detail = 'The authorization header is invalid.',
                     status = 403
                 )
-                return json({ 'errors': [ error.serialize() ] }, status=403)
+                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
             if authorization[0].lower() == 'bearer':
                 token = authorization[1]
                 try:
@@ -44,14 +44,14 @@ def webtoken(handler):
                         detail = 'Failed to decode the token.',
                         status = 403
                     )
-                    return json({ 'errors': [ error.serialize() ] }, status=403)
+                    return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
             else:
                 error = Error(
                     title = 'Invalid Authorization Header',
                     detail = 'The authorization header is invalid.',
                     status = 403
                 )
-                return json({ 'errors': [ error.serialize() ] }, status=403)
+                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
         else:
             kargs['token'] = None
         return await handler(request, *args, **kargs)
