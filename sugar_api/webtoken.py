@@ -64,8 +64,12 @@ def webtoken(handler):
 class WebToken(object):
 
     @classmethod
-    async def payload(cls, attributes):
+    async def create(cls, attributes):
         raise NotImplementedError('WebToken.payload not implemented.')
+
+    @classmethod
+    async def refresh(cls, token):
+        raise NotImplementedError('WebToken.refresh not implemented.')
 
     @classmethod
     def set_secret(cls, secret):
@@ -116,6 +120,12 @@ class WebToken(object):
         async def post(*args, **kargs):
             return await cls._post(*args, **kargs)
 
+        @bp.patch(url)
+        @accept
+        @webtoken
+        async def patch(*args, **kargs):
+            return await cls._patch(*args, **kargs)
+
         return bp
 
     @classmethod
@@ -125,7 +135,7 @@ class WebToken(object):
         attributes = data.get('attributes')
 
         try:
-            payload = await cls.payload(attributes)
+            payload = await cls.create(attributes)
         except Exception as e:
             error = Error(
                 title = 'Create Token Error',
@@ -138,6 +148,35 @@ class WebToken(object):
 
         return jsonapi({
             'data': {
-                'attributes': { 'token': token }
+                'token': token
+            }
+        }, status=200)
+
+    @classmethod
+    async def _patch(cls, request, token=None):
+
+        if not token:
+            error = Error(
+                title = 'Refresh Token Error',
+                detail = 'No token provided.',
+                status = 403
+            )
+            return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
+
+        try:
+            payload = await cls.refresh(token)
+        except Exception as e:
+            error = Error(
+                title = 'Refresh Token Error',
+                detail = str(e),
+                status = 403
+            )
+            return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
+
+        token = jwt.encode(payload, __secret__, algorithm=__algorithm__)
+
+        return jsonapi({
+            'data': {
+                'token': token
             }
         }, status=200)
