@@ -14,11 +14,8 @@ from . validate import validate
 __secret__ = str(uuid4())
 __algorithm__ = 'HS256'
 __options__ = {
-    'verify_signature': True,
     'verify_exp': True,
-    'verify_nbf': False,
-    'verify_iat': True,
-    'verify_aud': False
+    'verify_nbf': True
 }
 
 
