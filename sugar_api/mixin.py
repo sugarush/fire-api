@@ -36,7 +36,7 @@ class JSONAPIMixin(object):
         del data['attributes']['_id']
 
         if hasattr(self, 'on_render'):
-            data = self.on_render(data, token)
+            self.on_render(data, token)
 
         if self.__get__:
 
