@@ -4,3 +4,4 @@ git+https://github.com/sugarush/sugar-odm@master#egg=sugar-odm
 
 pyjwt
 sanic
+aioredis
