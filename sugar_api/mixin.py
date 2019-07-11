@@ -51,7 +51,7 @@ class JSONAPIMixin(object):
 
             token_data = token.get('data', { })
             token_id = token_data.get('id')
-            token_groups = token_data.get('groups')
+            token_groups = token_data.get('groups', [ ])
 
             attributes = data.get('attributes')
 
