@@ -373,17 +373,15 @@ class JSONAPIMixin(object):
 
                 offset = int(request.args.get('page[offset]', 0))
                 limit = int(request.args.get('page[limit]', 100))
+                if limit > 1000:
+                    limit = 1000
                 count = 0
 
                 async for model in cls.find(query):
                     count += 1
 
-                if limit < 0:
-                    async for model in cls.find(query, sort=sort, skip=offset):
-                        models.append(model)
-                else:
-                    async for model in cls.find(query, sort=sort, skip=offset, limit=limit):
-                        models.append(model)
+                async for model in cls.find(query, sort=sort, skip=offset, limit=limit):
+                    models.append(model)
 
             except Exception as e:
                 error = Error(
