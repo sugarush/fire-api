@@ -28,12 +28,12 @@ class JSONAPIMixin(object):
         data['id'] = self.id
         data['attributes'] = self.serialize()
 
+        del data['attributes']['_id']
+
         return data
 
     def render(self, token):
         data = self.to_jsonapi()
-
-        del data['attributes']['_id']
 
         if hasattr(self, 'on_render'):
             self.on_render(data, token)
