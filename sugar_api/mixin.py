@@ -151,6 +151,9 @@ class JSONAPIMixin(object):
     def _check_create(cls, handler):
         async def decorator(request, *args, **kargs):
 
+            # XXX: The request data has already been validated
+            # XXX: with the @validate decorator.
+
             data = request.json.get('data')
 
             type = data.get('type')
@@ -178,6 +181,9 @@ class JSONAPIMixin(object):
     @classmethod
     def _check_update(cls, handler):
         async def decorator(request, *args, **kargs):
+
+            # XXX: The request data has already been validated
+            # XXX: with the @validate decorator.
 
             data = request.json.get('data')
 
@@ -224,6 +230,9 @@ class JSONAPIMixin(object):
 
     @classmethod
     async def _create(cls, request, token=None, errors=[ ]):
+
+        # XXX: The request data has already been validated
+        # XXX: with the @validate decorator.
 
         # XXX: The request has already been verified
         # XXX: in the decorator cls._check_create.
@@ -420,8 +429,11 @@ class JSONAPIMixin(object):
     @classmethod
     async def _update(cls, request, id=None, token=None, errors=[ ]):
 
+        # XXX: The request data has already been validated
+        # XXX: with the @validate decorator.
+
         # XXX: The request has already been verified
-        # XXX: in the decorator cls._check_update.
+        # XXX: with the decorator @cls._check_update.
 
         data = request.json.get('data')
 
