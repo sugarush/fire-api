@@ -241,7 +241,6 @@ class JSONAPIMixin(object):
 
         try:
             model = cls.from_jsonapi(data)
-
         except Exception as e:
             error = Error(
                 title = 'Create Error',
@@ -262,7 +261,6 @@ class JSONAPIMixin(object):
                     status = 409
                 )
                 return jsonapi({ 'errors': [ error.serialize() ] }, status=409)
-
         except Exception as e:
             error = Error(
                 title = 'Create Error',
@@ -273,7 +271,6 @@ class JSONAPIMixin(object):
 
         try:
             await model.save()
-
         except Exception as e:
             error = Error(
                 title = 'Create Error',
@@ -294,11 +291,25 @@ class JSONAPIMixin(object):
 
     @classmethod
     async def _read(cls, request, id=None, token=None, errors=[ ]):
+
+        fields_json = request.args.get('fields', '{ }')
+
+        try:
+            fields = ujson.loads(fields_json)
+        except Exception as e:
+            error = Error(
+                title = 'Read Error',
+                detail = str(e),
+                status = 403
+            )
+            return jsonapi({
+                'errors': [ error.serialize() ]
+            }, status=403)
+
         if id:
 
             try:
-                model = await cls.find_by_id(id)
-
+                model = await cls.find_by_id(id, projection=fields)
             except Exception as e:
                 error = Error(
                     title = 'Read Error',
@@ -331,13 +342,13 @@ class JSONAPIMixin(object):
         else:
 
             try:
+
                 models = [ ]
 
                 query_json = request.args.get('query', '{ }')
 
                 try:
                     query = ujson.loads(query_json)
-
                 except Exception as e:
                     error = Error(
                         title = 'Read Error',
@@ -354,7 +365,6 @@ class JSONAPIMixin(object):
 
                     try:
                         sort = filter(lambda item: item != '', sort.split(','))
-
                     except Exception as e:
                         error = Error(
                             title = 'Read Error',
@@ -382,6 +392,7 @@ class JSONAPIMixin(object):
 
                 offset = int(request.args.get('page[offset]', 0))
                 limit = int(request.args.get('page[limit]', 100))
+
                 if limit > 1000:
                     limit = 1000
                 count = 0
@@ -389,7 +400,12 @@ class JSONAPIMixin(object):
                 async for model in cls.find(query):
                     count += 1
 
-                async for model in cls.find(query, sort=sort, skip=offset, limit=limit):
+                async for model in cls.find(query,
+                    sort=sort,
+                    skip=offset,
+                    limit=limit,
+                    projection=fields
+                ):
                     models.append(model)
 
             except Exception as e:
@@ -441,7 +457,6 @@ class JSONAPIMixin(object):
 
         try:
             model = await cls.find_by_id(id)
-
         except Exception as e:
             error = Error(
                 title = 'Update Error',
@@ -452,7 +467,6 @@ class JSONAPIMixin(object):
 
         try:
             model.update(attributes)
-
         except Exception as e:
             error = Error(
                 title = 'Update Error',
@@ -471,7 +485,6 @@ class JSONAPIMixin(object):
 
         try:
             await model.save()
-
         except Exception as e:
             error = Error(
                 title = 'Update Error',
@@ -495,7 +508,6 @@ class JSONAPIMixin(object):
 
         try:
             model = await cls.find_by_id(id)
-
         except Exception as e:
             error = Error(
                 title = 'Delete Error',
@@ -506,7 +518,6 @@ class JSONAPIMixin(object):
 
         try:
             await model.delete()
-
         except Exception as e:
             error = Error(
                 title = 'Delete Error',
