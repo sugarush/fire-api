@@ -292,10 +292,12 @@ class JSONAPIMixin(object):
     @classmethod
     async def _read(cls, request, id=None, token=None, errors=[ ]):
 
-        fields_json = request.args.get('fields', '{ }')
+        fields = None
+        fields_json = request.args.get('fields', None)
 
         try:
-            fields = ujson.loads(fields_json)
+            if fields_json:
+                fields = ujson.loads(fields_json)
         except Exception as e:
             error = Error(
                 title = 'Read Error',
