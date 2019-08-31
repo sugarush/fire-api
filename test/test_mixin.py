@@ -120,7 +120,9 @@ class JSONAPIMixinTest(AsyncTestCase):
 
         await test.save()
 
-        response = await Mixin._read(None, test.id)
+        response = await Mixin._read(Document({
+            'args': { }
+        }), test.id)
 
         response = decode(response)
 
@@ -130,7 +132,9 @@ class JSONAPIMixinTest(AsyncTestCase):
 
     async def test_read_by_id_no_data_found(self):
 
-        response = await Mixin._read(None, 'aabbccddeeffaabbccddeeff')
+        response = await Mixin._read(Document({
+            'args': { }
+        }), 'aabbccddeeffaabbccddeeff')
 
         response = decode(response)
 

@@ -60,7 +60,9 @@ class JSONAPIMixin(object):
             if self.id == token_id:
                 groups.append('self')
 
-            _apply_restrictions(attributes, self.__get__, groups, [ ], [ ])
+            model_data = self.serialize()
+
+            _apply_restrictions(attributes, self.__get__, groups, [ ], [ ], model_data, token_id)
 
         return data
 
@@ -110,7 +112,7 @@ class JSONAPIMixin(object):
         @webtoken
         @rate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @acl('create', cls.__acl__, cls)
-        @set(cls.__set__)
+        @set(cls.__set__, cls)
         async def create(*args, **kargs):
             return await cls._create(*args, **kargs)
 
@@ -132,7 +134,7 @@ class JSONAPIMixin(object):
         @webtoken
         @rate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @acl('update', cls.__acl__, cls)
-        @set(cls.__set__)
+        @set(cls.__set__, cls)
         async def update(*args, **kargs):
             return await cls._update(*args, **kargs)
 

@@ -3,7 +3,7 @@ from copy import copy
 from . header import jsonapi
 from . error import Error
 
-def set(restrictions):
+def set(restrictions, Model=None):
     def wrapper(handler):
         async def decorator(request, *args, **kargs):
             if not restrictions:
@@ -68,23 +68,29 @@ def set(restrictions):
             if id == token_id:
                 groups.append('self')
 
+            path = [ ]
             errors = kargs['errors'] = [ ]
+            model = await Model.find_by_id(id)
+            model_data = None
 
-            _apply_restrictions(attributes, restrictions, groups, errors, [ ])
+            if model:
+                model_data = model.serialize()
+
+            _apply_restrictions(attributes, restrictions, groups, errors, path, model_data, token_id)
 
             return await handler(request, *args, **kargs)
         return decorator
     return wrapper
 
-def _apply_restrictions(attributes, restrictions, groups, errors, path):
+def _apply_restrictions(attributes, restrictions, groups, errors, path, model_data, token_id):
     for (key, allowed_groups) in restrictions.items():
         if isinstance(allowed_groups, dict):
             if attributes.get(key):
                 _path = copy(path)
                 _path.append(key)
-                _apply_restrictions(attributes[key], restrictions[key], groups, errors, _path)
+                _apply_restrictions(attributes[key], restrictions[key], groups, errors, _path, model_data, token_id)
         else:
-            if not _contains_any(groups, allowed_groups):
+            if not _check_restrictions(groups, allowed_groups, model_data, token_id):
                 if attributes.get(key):
                     del attributes[key]
                     attribute = f'{key}'
@@ -100,8 +106,21 @@ def _apply_restrictions(attributes, restrictions, groups, errors, path):
             if not attributes.get(key):
                 del attributes[key]
 
-def _contains_any(groups, allowed_groups):
+def _check_restrictions(groups, allowed_groups, model_data, token_id):
     for group in allowed_groups:
-        if group in groups:
+        if group.startswith('$'):
+            value = _get_value(group.strip('$'), model_data)
+            if token_id == value:
+                return True
+        elif group.startswith('#'):
+            value = _get_value(group.strip('#'), model_data)
+            if token_id in value:
+                return True
+        elif group in groups:
             return True
     return False
+
+def _get_value(path, model_data):
+    for key in path.split('.'):
+        model_data = model_data[key]
+    return model_data
