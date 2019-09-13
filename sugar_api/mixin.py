@@ -14,6 +14,19 @@ from . validate import validate
 from . webtoken import WebToken, webtoken
 
 
+class TimestampMixin(object):
+
+    def timestamp(self, value):
+        if isinstance(value, str):
+            if value.endswith('Z'):
+                value = value[:-1] # Remove the Z from the javascript timestamp
+            return datetime.fromisoformat(value)
+        elif isinstance(value, datetime):
+            return value
+        else:
+            raise Exception('Invalid input.')
+
+
 class JSONAPIMixin(object):
 
     __rate__ = (0, 'none')
