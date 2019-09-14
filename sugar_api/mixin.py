@@ -1,4 +1,4 @@
-import ujson
+import json
 from copy import copy
 from datetime import datetime
 
@@ -313,7 +313,7 @@ class JSONAPIMixin(object):
 
         try:
             if fields_json:
-                fields = ujson.loads(fields_json)
+                fields = json.loads(fields_json)
         except Exception as e:
             error = Error(
                 title = 'Read Error',
@@ -366,7 +366,7 @@ class JSONAPIMixin(object):
                 query_json = request.args.get('query', '{ }')
 
                 try:
-                    query = ujson.loads(query_json)
+                    query = json.loads(query_json)
                 except Exception as e:
                     error = Error(
                         title = 'Read Error',
