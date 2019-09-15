@@ -157,11 +157,9 @@ class WebToken(object):
 
         token = jwt.encode(payload, __secret__, algorithm=__algorithm__)
 
-        print(token)
-
         return jsonapi({
             'data': {
-                'token': token
+                'token': token.decode('utf-8')
             }
         }, status=200)
 
@@ -190,6 +188,6 @@ class WebToken(object):
 
         return jsonapi({
             'data': {
-                'token': token
+                'token': token.decode('utf-8')
             }
         }, status=200)
