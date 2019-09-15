@@ -25,7 +25,7 @@ class TimestampMixin(object):
         elif isinstance(value, datetime):
             return value
         else:
-            raise Exception('Invalid input.')
+            return value
 
 
 class JSONAPIMixin(object):
