@@ -157,6 +157,8 @@ class WebToken(object):
 
         token = jwt.encode(payload, __secret__, algorithm=__algorithm__)
 
+        print(token)
+
         return jsonapi({
             'data': {
                 'token': token
