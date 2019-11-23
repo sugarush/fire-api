@@ -132,7 +132,9 @@ class WebToken(object):
             return await cls._post(*args, **kargs)
 
         @bp.patch(url)
+        @content_type
         @accept
+        @validate
         @webtoken
         async def patch(*args, **kargs):
             return await cls._patch(*args, **kargs)
@@ -174,8 +176,11 @@ class WebToken(object):
             )
             return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
+        data = request.json.get('data')
+        attributes = data.get('attributes')
+
         try:
-            payload = await cls.refresh(token)
+            payload = await cls.refresh(attributes, token)
         except Exception as e:
             error = Error(
                 title = 'Refresh Token Error',
