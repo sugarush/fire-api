@@ -175,10 +175,9 @@ class WebToken(object):
             )
             return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
-        data = request.json.get('data')
         attributes = None
-        if data:
-            attributes = data.get('attributes')
+        if request.json and request.json.get('data'):
+            attributes = request.json.get('data').get('attributes')
             if not attributes:
                 if not token:
                     error = Error(
