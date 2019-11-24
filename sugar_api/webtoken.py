@@ -79,7 +79,7 @@ class WebToken(object):
         raise NotImplementedError('WebToken.payload not implemented.')
 
     @classmethod
-    async def refresh(cls, token):
+    async def refresh(cls, attributes, token):
         raise NotImplementedError('WebToken.refresh not implemented.')
 
     @classmethod
@@ -134,7 +134,6 @@ class WebToken(object):
         @bp.patch(url)
         @content_type
         @accept
-        @validate
         @webtoken
         async def patch(*args, **kargs):
             return await cls._patch(*args, **kargs)
@@ -177,7 +176,19 @@ class WebToken(object):
             return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
         data = request.json.get('data')
-        attributes = data.get('attributes')
+        attributes = None
+        if data:
+            attributes = data.get('attributes')
+            if not attributes:
+                if not token:
+                    error = Error(
+                        title = 'Refresh Token Error',
+                        detail = 'No attributes provided.',
+                        status = 403
+                    )
+                    return jsonapi({
+                        'errors': [ error.serialize() ]
+                    }, status=403)
 
         try:
             payload = await cls.refresh(attributes, token)
