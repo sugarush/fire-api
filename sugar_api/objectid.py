@@ -15,26 +15,26 @@ def objectid(key):
             if not id:
                 return await handler(request, *args, **kargs)
 
+            valid_uuid = True
+            valid_oid = True
+
             try:
                 UUID(id)
             except ValueError:
+                valid_uuid = False
 
+            try:
+                ObjectId(id)
+            except InvalidId:
+                valid_oid = False
+
+            if not (valid_uuid or valid_oid):
                 error = Error(
                     title = 'Object ID Error',
                     detail = 'Invalid object ID.',
                     status = 403
                 )
                 return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
-
-                try:
-                    ObjectId(id)
-                except InvalidId:
-                    error = Error(
-                        title = 'Object ID Error',
-                        detail = 'Invalid object ID.',
-                        status = 403
-                    )
-                    return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
             return await handler(request, *args, **kargs)
         return decorator
