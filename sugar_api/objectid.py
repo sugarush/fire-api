@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from bson import ObjectId
 from bson.objectid import InvalidId
 
@@ -14,14 +16,25 @@ def objectid(key):
                 return await handler(request, *args, **kargs)
 
             try:
-                ObjectId(id)
-            except InvalidId:
+                UUID(id)
+            except ValueError:
+
                 error = Error(
                     title = 'Object ID Error',
                     detail = 'Invalid object ID.',
                     status = 403
                 )
                 return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
+
+                try:
+                    ObjectId(id)
+                except InvalidId:
+                    error = Error(
+                        title = 'Object ID Error',
+                        detail = 'Invalid object ID.',
+                        status = 403
+                    )
+                    return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
             return await handler(request, *args, **kargs)
         return decorator
