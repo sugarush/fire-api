@@ -289,7 +289,7 @@ class JSONAPIMixin(object):
 
         if hasattr(model, 'before_create'):
             try:
-                model.before_create()
+                await model.before_create()
             except Exception as e:
                 error = Error(
                     title = 'Create Error',
