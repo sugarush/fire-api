@@ -293,7 +293,7 @@ class JSONAPIMixin(object):
             except Exception as e:
                 error = Error(
                     title = 'Create Error',
-                    detail = str(e)
+                    detail = str(e),
                     status = 403
                 )
                 return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
