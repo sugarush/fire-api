@@ -502,6 +502,14 @@ class JSONAPIMixin(object):
             )
             return jsonapi({ 'errors': [ error.serialize() ] }, status=500)
 
+        if not model:
+            error = Error(
+                title = 'Delete Error',
+                detail = 'Model not found.',
+                status = 404
+            )
+            return jsonapi({ 'errors': [ error.serialize() ] }, status=404)
+
         try:
             model.update(attributes)
         except Exception as e:
@@ -555,6 +563,14 @@ class JSONAPIMixin(object):
                 status = 500
             )
             return jsonapi({ 'errors': [ error.serialize() ] }, status=500)
+
+        if not model:
+            error = Error(
+                title = 'Delete Error',
+                detail = 'Model not found.',
+                status = 404
+            )
+            return jsonapi({ 'errors': [ error.serialize() ] }, status=404)
 
         try:
             await model.delete()
