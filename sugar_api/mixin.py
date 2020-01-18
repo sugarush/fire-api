@@ -287,9 +287,9 @@ class JSONAPIMixin(object):
             )
             return jsonapi({ 'errors': [ error.serialize() ] }, status=500)
 
-        if hasattr(model, 'before_create'):
+        if hasattr(model, 'on_create'):
             try:
-                await model.before_create()
+                await model.on_create(token)
             except Exception as e:
                 error = Error(
                     title = 'Create Error',
