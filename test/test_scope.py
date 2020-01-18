@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from sugar_api.scope import _check_scope
+from fire_api.scope import _check_scope
 
 
 class ScopeTest(TestCase):

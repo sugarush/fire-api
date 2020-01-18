@@ -1,7 +1,7 @@
-from sugar_asynctest import AsyncTestCase
-from sugar_odm import MemoryModel, Model, Field
+from fire_asynctest import AsyncTestCase
+from fire_odm import MemoryModel, Model, Field
 
-from sugar_api.acl import _check_acl, _check_action
+from fire_api.acl import _check_acl, _check_action
 
 class ACLTest(AsyncTestCase):
 

@@ -1,25 +1,25 @@
-__author__ = 'Lucifer Avada'
+__author__ = 'Paul Severance'
 
 from setuptools import setup
 
 setup(
-    name='sugar-api',
+    name='fire-api',
     version='0.0.1',
-    author='Lucifer Avada',
-    author_email='lucifer.avada@gmail.com',
-    url='https://github.com/sugarush/sugar-api',
+    author='Paul Severance',
+    author_email='paul.severance@gmail.com',
+    url='https://github.com/sugarush/fire-api',
     packages=[
-        'sugar_api'
+        'fire_api'
     ],
-    description='A Sanic JSONAPI implementation.',
+    description='A JSONAPI implementation.',
     install_requires=[
-        'sugar_document',
-        'sugar_asynctest',
-        'sugar_odm'
+        'fire_document',
+        'fire_asynctest',
+        'fire_odm'
     ],
     dependency_links=[
-        'git+https://github.com/sugarush/sugar-document@master#egg=sugar-document',
-        'git+https://github.com/sugarush/sugar-asynctest@master#egg=sugar-asynctest',
-        'git+https://github.com/sugarush/sugar-odm@master#egg=sugar-odm',
+        'git+https://github.com/sugarush/fire-document@master#egg=fire-document',
+        'git+https://github.com/sugarush/fire-asynctest@master#egg=fire-asynctest',
+        'git+https://github.com/sugarush/fire-odm@master#egg=fire-odm',
     ]
 )

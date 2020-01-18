@@ -1,1 +1,1 @@
-set -e module
+set -e python_module

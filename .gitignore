@@ -1,6 +1,6 @@
 .coverage
 .DS_Store
+.venv
 __pycache__
 mongodb_data
-.venv
 htmlcov

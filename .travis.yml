@@ -9,10 +9,9 @@ services:
 install:
   - pip install -r .requirements
   - pip install coverage codecov
-  - source .venv-activate
 
 script:
-  - coverage run --source "${MODULE}" --module "unittest" discover --verbose "test"
+  - coverage run --source "fire_api" --module "unittest" discover --verbose "test"
   - coverage report
 
 after_success:

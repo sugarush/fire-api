@@ -2,11 +2,11 @@ import json
 
 from unittest import skip
 
-from sugar_asynctest import AsyncTestCase
-from sugar_document import Document
-from sugar_odm import MemoryModel, Field
+from fire_asynctest import AsyncTestCase
+from fire_document import Document
+from fire_odm import MemoryModel, Field
 
-from sugar_api import WebToken
+from fire_api import WebToken
 
 
 def decode(response):
