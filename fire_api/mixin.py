@@ -363,9 +363,20 @@ class JSONAPIMixin(object):
                     'errors': [ error.serialize() ]
                 }, status=404)
 
-            response = {
-                'data': model.render(token)
-            }
+            if hasattr(model, 'on_read'):
+                try:
+                    await model.on_read(token)
+                except Exception as e:
+                    error = Error(
+                        title = 'Read Error',
+                        detail = str(e),
+                        status = 403
+                    )
+                    return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
+
+                response = {
+                    'data': model.render(token)
+                }
 
             if errors:
                 response['errors'] = list(map(lambda error: \
@@ -442,6 +453,17 @@ class JSONAPIMixin(object):
                     limit=limit,
                     projection=fields
                 ):
+                    if hasattr(model, 'on_read'):
+                        try:
+                            await model.on_read(token)
+                        except Exception as e:
+                            error = Error(
+                                title = 'Read Error',
+                                detail = str(e),
+                                status = 403
+                            )
+                            errors.append(error)
+                            continue
                     models.append(model)
 
             except Exception as e:
@@ -453,7 +475,7 @@ class JSONAPIMixin(object):
                 )
                 return jsonapi({ 'errors': [ error.serialize() ] }, status=500)
 
-            if not models:
+            if not models and not errors:
                 error = Error(
                     title = 'Read Error',
                     detail = 'No data found.',
@@ -504,11 +526,22 @@ class JSONAPIMixin(object):
 
         if not model:
             error = Error(
-                title = 'Delete Error',
+                title = 'Update Error',
                 detail = 'Model not found.',
                 status = 404
             )
             return jsonapi({ 'errors': [ error.serialize() ] }, status=404)
+
+        if hasattr(model, 'on_update'):
+            try:
+                await model.on_update(token, attributes)
+            except Exception as e:
+                error = Error(
+                    title = 'Update Error',
+                    detail = str(e),
+                    status = 403
+                )
+                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
         try:
             model.update(attributes)
@@ -571,6 +604,17 @@ class JSONAPIMixin(object):
                 status = 404
             )
             return jsonapi({ 'errors': [ error.serialize() ] }, status=404)
+
+        if hasattr(model, 'on_delete'):
+            try:
+                await model.on_delete(token)
+            except Exception as e:
+                error = Error(
+                    title = 'Delete Error',
+                    detail = str(e),
+                    status = 403
+                )
+                return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
         try:
             await model.delete()
