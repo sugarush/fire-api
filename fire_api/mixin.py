@@ -374,9 +374,9 @@ class JSONAPIMixin(object):
                     )
                     return jsonapi({ 'errors': [ error.serialize() ] }, status=403)
 
-                response = {
-                    'data': model.render(token)
-                }
+            response = {
+                'data': model.render(token)
+            }
 
             if errors:
                 response['errors'] = list(map(lambda error: \
