@@ -10,6 +10,7 @@ from . error import Error
 from . header import content_type, accept, jsonapi
 from . objectid import objectid
 from . preflight import preflight
+from . publish import publish
 from . rate import rate
 from . restrictions import set, _apply_restrictions
 from . validate import validate
@@ -128,6 +129,7 @@ class JSONAPIMixin(object):
         @rate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @acl('create', cls.__acl__, cls)
         @set(cls.__set__, cls)
+        @publish
         async def create(*args, **kargs):
             return await cls._create(*args, **kargs)
 
@@ -150,6 +152,7 @@ class JSONAPIMixin(object):
         @rate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @acl('update', cls.__acl__, cls)
         @set(cls.__set__, cls)
+        @publish
         async def update(*args, **kargs):
             return await cls._update(*args, **kargs)
 
@@ -159,6 +162,7 @@ class JSONAPIMixin(object):
         @webtoken
         @rate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @acl('delete', cls.__acl__, cls)
+        @publish
         async def delete(*args, **kargs):
             return await cls._delete(*args, **kargs)
 
