@@ -1,8 +1,9 @@
-import json, traceback
+import json
 from copy import copy
 from datetime import datetime
 
 from sanic import Blueprint
+from sanic.log import logger
 
 from . acl import acl
 from . error import Error
@@ -258,7 +259,7 @@ class JSONAPIMixin(object):
         try:
             model = cls.from_jsonapi(data)
         except Exception as e:
-            traceback.print_exc()
+            logger.info(str(e), exc_info=True)
             error = Error(
                 title = 'Create Error',
                 detail = str(e),
@@ -279,7 +280,7 @@ class JSONAPIMixin(object):
                 )
                 return jsonapi({ 'errors': [ error.serialize() ] }, status=409)
         except Exception as e:
-            traceback.print_exc()
+            logger.info(str(e), exc_info=True)
             error = Error(
                 title = 'Create Error',
                 detail = str(e),
@@ -291,6 +292,7 @@ class JSONAPIMixin(object):
             try:
                 await model.on_create(token)
             except Exception as e:
+                logger.info(str(e), exc_info=True)
                 error = Error(
                     title = 'Create Error',
                     detail = str(e),
@@ -301,7 +303,7 @@ class JSONAPIMixin(object):
         try:
             await model.save()
         except Exception as e:
-            traceback.print_exc()
+            logger.info(str(e), exc_info=True)
             error = Error(
                 title = 'Create Error',
                 detail = str(e),
@@ -329,7 +331,7 @@ class JSONAPIMixin(object):
             if fields_json:
                 fields = json.loads(fields_json)
         except Exception as e:
-            traceback.print_exc()
+            logger.info(str(e), exc_info=True)
             error = Error(
                 title = 'Read Error',
                 detail = str(e),
@@ -344,7 +346,7 @@ class JSONAPIMixin(object):
             try:
                 model = await cls.find_by_id(id, projection=fields)
             except Exception as e:
-                traceback.print_exc()
+                logger.info(str(e), exc_info=True)
                 error = Error(
                     title = 'Read Error',
                     detail = str(e),
@@ -367,6 +369,7 @@ class JSONAPIMixin(object):
                 try:
                     await model.on_read(token)
                 except Exception as e:
+                    logger.info(str(e), exc_info=True)
                     error = Error(
                         title = 'Read Error',
                         detail = str(e),
@@ -395,7 +398,7 @@ class JSONAPIMixin(object):
                 try:
                     query = json.loads(query_json)
                 except Exception as e:
-                    traceback.print_exc()
+                    logger.info(str(e), exc_info=True)
                     error = Error(
                         title = 'Read Error',
                         detail = str(e),
@@ -412,7 +415,7 @@ class JSONAPIMixin(object):
                     try:
                         sort = filter(lambda item: item != '', sort.split(','))
                     except Exception as e:
-                        traceback.print_exc()
+                        logger.info(str(e), exc_info=True)
                         error = Error(
                             title = 'Read Error',
                             detail = str(e),
@@ -457,6 +460,7 @@ class JSONAPIMixin(object):
                         try:
                             await model.on_read(token)
                         except Exception as e:
+                            logger.info(str(e), exc_info=True)
                             error = Error(
                                 title = 'Read Error',
                                 detail = str(e),
@@ -467,7 +471,7 @@ class JSONAPIMixin(object):
                     models.append(model)
 
             except Exception as e:
-                traceback.print_exc()
+                logger.info(str(e), exc_info=True)
                 error = Error(
                     title = 'Read Error',
                     detail = str(e),
@@ -536,6 +540,7 @@ class JSONAPIMixin(object):
             try:
                 await model.on_update(token, attributes)
             except Exception as e:
+                logger.info(str(e), exc_info=True)
                 error = Error(
                     title = 'Update Error',
                     detail = str(e),
@@ -546,7 +551,7 @@ class JSONAPIMixin(object):
         try:
             model.update(attributes)
         except Exception as e:
-            traceback.print_exc()
+            logger.info(str(e), exc_info=True)
             error = Error(
                 title = 'Update Error',
                 detail = str(e),
@@ -565,7 +570,7 @@ class JSONAPIMixin(object):
         try:
             await model.save()
         except Exception as e:
-            traceback.print_exc()
+            logger.info(str(e), exc_info=True)
             error = Error(
                 title = 'Update Error',
                 detail = str(e),
@@ -589,7 +594,7 @@ class JSONAPIMixin(object):
         try:
             model = await cls.find_by_id(id)
         except Exception as e:
-            traceback.print_exc()
+            logger.info(str(e), exc_info=True)
             error = Error(
                 title = 'Delete Error',
                 detail = str(e),
@@ -609,6 +614,7 @@ class JSONAPIMixin(object):
             try:
                 await model.on_delete(token)
             except Exception as e:
+                logger.info(str(e), exc_info=True)
                 error = Error(
                     title = 'Delete Error',
                     detail = str(e),
@@ -619,7 +625,7 @@ class JSONAPIMixin(object):
         try:
             await model.delete()
         except Exception as e:
-            traceback.print_exc()
+            logger.info(str(e), exc_info=True)
             error = Error(
                 title = 'Delete Error',
                 detail = str(e),
