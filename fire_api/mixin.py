@@ -1,16 +1,23 @@
 import json
+import asyncio
 from copy import copy
 from datetime import datetime
 
+from aioredis import pubsub
+
 from sanic import Blueprint
 from sanic.log import logger
+
+from fire_document import Document
 
 from . acl import acl
 from . error import Error
 from . header import content_type, accept, jsonapi
 from . objectid import objectid
 from . preflight import preflight
+from . publish import publish
 from . rate import rate
+from . redis import Redis
 from . restrictions import set, _apply_restrictions
 from . validate import validate
 from . webtoken import WebToken, webtoken
@@ -104,9 +111,9 @@ class JSONAPIMixin(object):
         url = '/{path}'.format(path=cls._table)
 
         if realtime:
-            @bp.websocket(f'/{url}/realtime')
+            @bp.websocket(f'{url}/realtime')
             async def realtime(request, socket):
-                await cls._realtime(request, socket)
+                return await cls._realtime(request, socket)
 
         @bp.options(url)
         async def options(*args, **kargs):
@@ -133,6 +140,7 @@ class JSONAPIMixin(object):
         @rate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @acl('create', cls.__acl__, cls)
         @set(cls.__set__, cls)
+        @publish('create')
         async def create(*args, **kargs):
             return await cls._create(*args, **kargs)
 
@@ -155,6 +163,7 @@ class JSONAPIMixin(object):
         @rate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @acl('update', cls.__acl__, cls)
         @set(cls.__set__, cls)
+        @publish('update')
         async def update(*args, **kargs):
             return await cls._update(*args, **kargs)
 
@@ -164,6 +173,7 @@ class JSONAPIMixin(object):
         @webtoken
         @rate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @acl('delete', cls.__acl__, cls)
+        @publish('delete')
         async def delete(*args, **kargs):
             return await cls._delete(*args, **kargs)
 
@@ -648,7 +658,28 @@ class JSONAPIMixin(object):
 
     @classmethod
     async def _realtime(cls, request, socket):
-        async with cls._collection.watch() as stream:
-            async for change in stream:
-                print(change)
-                await socket.send(change)
+        redis = await Redis.connect()
+
+        receiver = pubsub.Receiver()
+
+        async def channel_watcher():
+            async for channel, message in receiver.iter():
+                print(channel, message)
+
+        async def channel_subscriber():
+            while True:
+                try:
+                    data = json.loads(await socket.recv())
+                except Exception as e:
+                    logger.error(str(e), exc_info=True)
+
+                doc = Document(data)
+
+                if doc.action == 'subscribe':
+                    await redis.subscribe(receiver.channel(cls._table))
+                ## XXX: Would not implementing this cause a memory leak?
+                #elif doc.action = 'unsubscribe':
+                #    await redis.unsubscribe(cls.table)
+
+        asyncio.create_task(channel_watcher())
+        asyncio.create_task(channel_subscriber())
