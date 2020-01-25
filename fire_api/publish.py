@@ -3,3 +3,4 @@ def publish(handler):
         response = await handler(request, *args, **kargs)
         print(dir(response))
         return response
+    return decorator
