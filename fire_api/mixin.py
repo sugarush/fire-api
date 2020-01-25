@@ -10,7 +10,6 @@ from . error import Error
 from . header import content_type, accept, jsonapi
 from . objectid import objectid
 from . preflight import preflight
-from . publish import publish
 from . rate import rate
 from . restrictions import set, _apply_restrictions
 from . validate import validate
@@ -95,7 +94,7 @@ class JSONAPIMixin(object):
         return model
 
     @classmethod
-    def resource(cls, *args, **kargs):
+    def resource(cls, *args, realtime=False, **kargs):
 
         if not len(args) > 0:
             args = [ cls._table ]
@@ -103,6 +102,11 @@ class JSONAPIMixin(object):
         bp = Blueprint(*args, **kargs)
 
         url = '/{path}'.format(path=cls._table)
+
+        if realtime:
+            @bp.websocket(f'/{url}/realtime')
+            async def realtime(request, socket):
+                await cls._realtime(request, socket)
 
         @bp.options(url)
         async def options(*args, **kargs):
@@ -129,7 +133,6 @@ class JSONAPIMixin(object):
         @rate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @acl('create', cls.__acl__, cls)
         @set(cls.__set__, cls)
-        @publish
         async def create(*args, **kargs):
             return await cls._create(*args, **kargs)
 
@@ -152,7 +155,6 @@ class JSONAPIMixin(object):
         @rate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @acl('update', cls.__acl__, cls)
         @set(cls.__set__, cls)
-        @publish
         async def update(*args, **kargs):
             return await cls._update(*args, **kargs)
 
@@ -162,7 +164,6 @@ class JSONAPIMixin(object):
         @webtoken
         @rate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @acl('delete', cls.__acl__, cls)
-        @publish
         async def delete(*args, **kargs):
             return await cls._delete(*args, **kargs)
 
@@ -644,3 +645,10 @@ class JSONAPIMixin(object):
                 error.serialize(), errors))
 
         return jsonapi(response, status=200)
+
+    @classmethod
+    async def _realtime(cls, request, socket):
+        async with cls._collection.watch() as stream:
+            async for change in stream:
+                print(change)
+                await socket.send(change)
