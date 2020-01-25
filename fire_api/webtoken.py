@@ -93,6 +93,18 @@ class WebToken(object):
         __algorithm__ = algorithm
 
     @classmethod
+    def get_secret(cls):
+        return __secret__
+
+    @classmethod
+    def get_algolithm(cls):
+        return __algorithm__
+
+    @classmethod
+    def get_options(cls):
+        return __options__
+
+    @classmethod
     def set_signature(cls, value):
         global __options__
         if not isinstance(value, bool):

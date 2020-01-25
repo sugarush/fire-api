@@ -3,6 +3,7 @@ import asyncio
 from copy import copy
 from datetime import datetime
 
+import jwt
 from aioredis import pubsub
 
 from sanic import Blueprint
@@ -662,18 +663,26 @@ class JSONAPIMixin(object):
 
         receiver = pubsub.Receiver()
 
-        async def channel_watcher():
-            async for channel, message in receiver.iter():
-                print(channel, message)
-
-        async def channel_subscriber():
+        async def socket_reader():
             while True:
                 try:
                     data = json.loads(await socket.recv())
                 except Exception as e:
-                    logger.error(str(e), exc_info=True)
+                    logger.info(str(e), exc_info=True)
 
                 doc = Document(data)
+
+                try:
+                    token = jwt.decode(doc.token, WebToken.get_secret(),
+                        algorithms=[ WebToken.get_algolithm() ],
+                        options=WebToken.get_options()
+                    )
+                except Exception as e:
+                    logger.info(str(e), exc_info=True)
+                    await socket.send(json.dumps({
+                        'error': 'Invalid token.'
+                    }))
+                    continue
 
                 if doc.action == 'subscribe':
                     await redis.subscribe(receiver.channel(cls._table))
@@ -681,5 +690,7 @@ class JSONAPIMixin(object):
                 #elif doc.action = 'unsubscribe':
                 #    await redis.unsubscribe(cls.table)
 
-        asyncio.create_task(channel_watcher())
-        asyncio.create_task(channel_subscriber())
+        asyncio.create_task(socket_reader())
+
+        async for channel, message in receiver.iter():
+            print(channel, message)
