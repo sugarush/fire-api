@@ -692,9 +692,9 @@ class JSONAPIMixin(object):
 
             doc = Document(data)
 
-            if doc.action == 'watch':
+            if doc.action == 'subscribe':
                 if await cls.exists(doc.id):
                     index[doc.id] = True
-            elif doc.action == 'unwatch':
+            elif doc.action == 'unsubscribe':
                 if doc.id in index:
                     del index[doc.id]
