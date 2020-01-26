@@ -141,7 +141,7 @@ class JSONAPIMixin(object):
         @rate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @acl('create', cls.__acl__, cls)
         @set(cls.__set__, cls)
-        @publish('create')
+        @publish('create', cls._table)
         async def create(*args, **kargs):
             return await cls._create(*args, **kargs)
 
@@ -164,7 +164,7 @@ class JSONAPIMixin(object):
         @rate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @acl('update', cls.__acl__, cls)
         @set(cls.__set__, cls)
-        @publish('update')
+        @publish('update', cls._table)
         async def update(*args, **kargs):
             return await cls._update(*args, **kargs)
 
@@ -174,7 +174,7 @@ class JSONAPIMixin(object):
         @webtoken
         @rate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @acl('delete', cls.__acl__, cls)
-        @publish('delete')
+        @publish('delete', cls._table)
         async def delete(*args, **kargs):
             return await cls._delete(*args, **kargs)
 
@@ -663,34 +663,38 @@ class JSONAPIMixin(object):
 
         receiver = pubsub.Receiver()
 
-        async def socket_reader():
-            while True:
-                try:
-                    data = json.loads(await socket.recv())
-                except Exception as e:
-                    logger.info(str(e), exc_info=True)
+        index = { }
 
-                doc = Document(data)
+        await redis.subscribe(receiver.channel(cls._table))
+
+        async def socket_writer(index):
+            async for _, message in receiver.iter():
 
                 try:
-                    token = jwt.decode(doc.token, WebToken.get_secret(),
-                        algorithms=[ WebToken.get_algolithm() ],
-                        options=WebToken.get_options()
-                    )
-                except Exception as e:
-                    logger.info(str(e), exc_info=True)
-                    await socket.send(json.dumps({
-                        'error': 'Invalid token.'
-                    }))
+                    action, id = message.decode().split(':')
+                except ValueError as e:
                     continue
 
-                if doc.action == 'subscribe':
-                    await redis.subscribe(receiver.channel(cls._table))
-                ## XXX: Would not implementing this cause a memory leak?
-                #elif doc.action = 'unsubscribe':
-                #    await redis.unsubscribe(cls.table)
+                if id in index:
+                    await socket.send(json.dumps({
+                        'action': action,
+                        'id': id
+                    }))
 
-        asyncio.create_task(socket_reader())
+        asyncio.create_task(socket_writer(index))
 
-        async for channel, message in receiver.iter():
-            print(channel, message)
+        while True:
+            try:
+                data = json.loads(await socket.recv())
+            except json.JSONDecodeError as e:
+                logger.info(str(e), exc_info=True)
+                continue
+
+            doc = Document(data)
+
+            if doc.action == 'watch':
+                if await cls.exists(doc.id):
+                    index[doc.id] = True
+            elif doc.action == 'unwatch':
+                if doc.id in index:
+                    del index[doc.id]
