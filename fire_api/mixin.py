@@ -668,6 +668,11 @@ class JSONAPIMixin(object):
 
             state = type('', (), {})()
             state.conn = await Redis.connect(lowlevel=True)
+            state.channel = aioredis.Channel(cls._table, is_pattern=False)
+
+            await state.conn.execute_pubsub('SUBSCRIBE', state.channel)
+
+            state.socket = socket
             state.uuid = str(uuid4())
             state.index = { }
 
@@ -691,13 +696,10 @@ class JSONAPIMixin(object):
                         if doc.id in state.index:
                             del state.index[doc.id]
 
-
             async def socket_writer(state):
-                channel = aioredis.Channel(cls._table, is_pattern=False)
-                await state.conn.execute_pubsub('SUBSCRIBE', channel)
 
                 while await channel.wait_message():
-                    message = await channel.get()
+                    message = await state.channel.get()
 
                     try:
                         action, id = message.decode().split(':')
@@ -705,7 +707,7 @@ class JSONAPIMixin(object):
                         continue
 
                     if id in state.index:
-                        await socket.send(json.dumps({
+                        await state.socket.send(json.dumps({
                             'action': action,
                             'id': id
                         }))
