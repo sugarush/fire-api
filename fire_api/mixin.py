@@ -698,7 +698,7 @@ class JSONAPIMixin(object):
 
             async def socket_writer(state):
 
-                while await channel.wait_message():
+                while await state.channel.wait_message():
                     message = await state.channel.get()
 
                     try:
