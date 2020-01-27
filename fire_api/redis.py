@@ -57,8 +57,13 @@ class Redis(object):
         if connection:
             return connection
 
-        cls.connections[key] = await aioredis.create_redis_pool(host, **kargs)
-        return cls.connections[key]
+        if kargs.get('lowlevel'):
+            del kargs['lowlevel']
+            cls.connections[key] = await aioredis.create_pool(host, **kargs)
+            return cls.connections[key]
+        else:
+            cls.connections[key] = await aioredis.create_redis_pool(host, **kargs)
+            return cls.connections[key]
 
     @classmethod
     async def close(cls):

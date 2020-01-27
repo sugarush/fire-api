@@ -2,12 +2,14 @@ import json
 import asyncio
 from copy import copy
 from datetime import datetime
+from uuid import uuid4
 
 import jwt
-from aioredis import pubsub
+import aioredis
 
 from sanic import Blueprint
 from sanic.log import logger
+from websockets.exceptions import ConnectionClosedError
 
 from fire_document import Document
 
@@ -649,7 +651,11 @@ class JSONAPIMixin(object):
             )
             return jsonapi({ 'errors': [ error.serialize() ] }, status=500)
 
-        response = { }
+        response = {
+            'data': {
+                'id': id
+            }
+        }
 
         if errors:
             response['errors'] = list(map(lambda error: \
@@ -659,42 +665,49 @@ class JSONAPIMixin(object):
 
     @classmethod
     async def _realtime(cls, request, socket):
-        redis = await Redis.connect()
 
-        receiver = pubsub.Receiver()
+            state = type('', (), {})()
+            state.conn = await Redis.connect(lowlevel=True)
+            state.uuid = str(uuid4())
+            state.index = { }
 
-        index = { }
+            async def socket_reader(state):
+                while True:
+                    try:
+                        data = json.loads(await socket.recv())
+                    except json.JSONDecodeError as e:
+                        logger.info(str(e), exc_info=True)
+                        continue
+                    except ConnectionClosedError as e:
+                        logger.info(str(e))
+                        break
 
-        await redis.subscribe(receiver.channel(cls._table))
+                    doc = Document(data)
 
-        async def socket_writer(index):
-            async for _, message in receiver.iter():
+                    if doc.action == 'subscribe':
+                        if await cls.exists(doc.id):
+                            state.index[doc.id] = True
+                    elif doc.action == 'unsubscribe':
+                        if doc.id in state.index:
+                            del state.index[doc.id]
 
-                try:
-                    action, id = message.decode().split(':')
-                except ValueError as e:
-                    continue
 
-                if id in index:
-                    await socket.send(json.dumps({
-                        'action': action,
-                        'id': id
-                    }))
+            async def socket_writer(state):
+                channel = aioredis.Channel(cls._table, is_pattern=False)
+                await state.conn.execute_pubsub('SUBSCRIBE', channel)
 
-        asyncio.create_task(socket_writer(index))
+                while await channel.wait_message():
+                    message = await channel.get()
 
-        while True:
-            try:
-                data = json.loads(await socket.recv())
-            except json.JSONDecodeError as e:
-                logger.info(str(e), exc_info=True)
-                continue
+                    try:
+                        action, id = message.decode().split(':')
+                    except ValueError as e:
+                        continue
 
-            doc = Document(data)
+                    if id in state.index:
+                        await socket.send(json.dumps({
+                            'action': action,
+                            'id': id
+                        }))
 
-            if doc.action == 'subscribe':
-                if await cls.exists(doc.id):
-                    index[doc.id] = True
-            elif doc.action == 'unsubscribe':
-                if doc.id in index:
-                    del index[doc.id]
+            await asyncio.gather(socket_reader(state), socket_writer(state))
