@@ -666,50 +666,52 @@ class JSONAPIMixin(object):
     @classmethod
     async def _realtime(cls, request, socket):
 
-            state = type('', (), {})()
-            state.conn = await Redis.connect(lowlevel=True)
-            state.channel = aioredis.Channel(cls._table, is_pattern=False)
+        state = type('', (), {})()
 
-            await state.conn.execute_pubsub('SUBSCRIBE', state.channel)
+        #state.conn = await Redis.connect(lowlevel=True)
+        #state.channel = aioredis.Channel(cls._table, is_pattern=False)
+        #await state.conn.execute_pubsub('SUBSCRIBE', state.channel)
 
-            state.socket = socket
-            state.uuid = str(uuid4())
-            state.index = { }
+        state.socket = socket
+        state.uuid = str(uuid4())
+        state.index = { }
 
-            async def socket_reader(state):
-                while True:
-                    try:
-                        data = json.loads(await socket.recv())
-                    except json.JSONDecodeError as e:
-                        logger.info(str(e), exc_info=True)
-                        continue
-                    except ConnectionClosedError as e:
-                        logger.info(str(e))
-                        break
+        async def socket_reader(state):
+            while True:
+                try:
+                    data = json.loads(await socket.recv())
+                except json.JSONDecodeError as e:
+                    logger.info(str(e), exc_info=True)
+                    continue
+                except ConnectionClosedError as e:
+                    logger.info(str(e))
+                    break
 
-                    doc = Document(data)
+                doc = Document(data)
 
-                    if doc.action == 'subscribe':
-                        if await cls.exists(doc.id):
-                            state.index[doc.id] = True
-                    elif doc.action == 'unsubscribe':
-                        if doc.id in state.index:
-                            del state.index[doc.id]
+                if doc.action == 'subscribe':
+                    if await cls.exists(doc.id):
+                        state.index[doc.id] = True
+                elif doc.action == 'unsubscribe':
+                    if doc.id in state.index:
+                        del state.index[doc.id]
 
-            async def socket_writer(state):
+        async def socket_writer(state):
+            conn = await aioredis.create_connection(Redis.default_host)
+            channel = aioredis.Channel(cls._table, is_pattern=False)
+            await conn.execute_pubsub('SUBSCRIBE', channel)
 
-                while await state.channel.wait_message():
-                    message = await state.channel.get()
+            async for message in channel.iter():
 
-                    try:
-                        action, id = message.decode().split(':')
-                    except ValueError as e:
-                        continue
+                try:
+                    action, id = message.decode().split(':')
+                except ValueError as e:
+                    continue
 
-                    if id in state.index:
-                        await state.socket.send(json.dumps({
-                            'action': action,
-                            'id': id
-                        }))
+                if id in state.index:
+                    await state.socket.send(json.dumps({
+                        'action': action,
+                        'id': id
+                    }))
 
-            await asyncio.gather(socket_reader(state), socket_writer(state))
+        await asyncio.gather(socket_reader(state), socket_writer(state))
