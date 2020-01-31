@@ -701,7 +701,7 @@ class JSONAPIMixin(object):
 
                 doc = Document(data)
 
-                router.emit(doc.action, doc.path, state, doc)
+                await router.emit(doc.action, doc.path, state, doc)
 
         async def socket_writer(state):
             conn = await aioredis.create_connection(Redis.default_host)
