@@ -410,4 +410,8 @@ class JSONAPIMixinTest(AsyncTestCase):
 
         response = decode(response)
 
-        self.assertDictEqual(response, { })
+        self.assertDictEqual(response, {
+            'data': {
+                'id': test.id
+            }
+        })

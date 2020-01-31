@@ -1,5 +1,4 @@
-import json
-import asyncio
+import json, asyncio
 from copy import copy
 from datetime import datetime
 from uuid import uuid4
@@ -12,6 +11,7 @@ from sanic.log import logger
 from websockets.exceptions import ConnectionClosedError
 
 from fire_document import Document
+from fire_router import Router
 
 from . acl import acl
 from . error import Error
@@ -676,6 +676,18 @@ class JSONAPIMixin(object):
         state.uuid = str(uuid4())
         state.index = { }
 
+        router = Router(methods=[ 'subscribe', 'unsubscribe' ])
+
+        @router.subscribe(f'/v1/{cls._table}/<id>')
+        async def subscribe(state, doc, id):
+            if await cls.exists(id):
+                state.index[id] = True
+
+        @router.unsubscribe(f'/v1/{cls._table}/<id>')
+        async def unsubscribe(state, doc, id):
+            if id in state.index:
+                del state.index[id]
+
         async def socket_reader(state):
             while True:
                 try:
@@ -687,14 +699,7 @@ class JSONAPIMixin(object):
                     logger.info(str(e))
                     break
 
-                doc = Document(data)
-
-                if doc.action == 'subscribe':
-                    if await cls.exists(doc.id):
-                        state.index[doc.id] = True
-                elif doc.action == 'unsubscribe':
-                    if doc.id in state.index:
-                        del state.index[doc.id]
+                router.emit(doc.action, doc.path, state, Document(data))
 
         async def socket_writer(state):
             conn = await aioredis.create_connection(Redis.default_host)
@@ -702,7 +707,6 @@ class JSONAPIMixin(object):
             await conn.execute_pubsub('SUBSCRIBE', channel)
 
             async for message in channel.iter():
-
                 try:
                     action, id = message.decode().split(':')
                 except ValueError as e:
