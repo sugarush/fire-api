@@ -8,24 +8,24 @@ def _check_scope(scope, token_scope, kargs):
             token_value = token_scope.get(key)
             karg_value = kargs.get(_key)
             if not token_value or not karg_value:
-                return False
-            if not token_value == karg_value:
-                return False
+                continue
+            if token_value == karg_value:
+                return True
         elif isinstance(value, str) and value.startswith('#'):
             _key = value.lstrip('#')
             token_value = token_scope.get(key)
             karg_value = kargs.get(_key)
             if not token_value or not karg_value:
-                return False
-            if not karg_value in token_value:
-                return False
+                continue
+            if karg_value in token_value:
+                return True
         else:
             _value = token_scope.get(key)
             if not _value:
-                return False
-            if not _value == value:
-                return False
-    return True
+                continue
+            if _value == value:
+                return True
+    return False
 
 def scope(scope):
     def wrapper(handler):
