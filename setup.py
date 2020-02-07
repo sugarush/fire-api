@@ -11,12 +11,14 @@ setup(
     packages=[
         'fire_api'
     ],
-    description='A JSONAPI implementation.',
+    description='An asynchronous JSONAPI implementation based on Sanic.',
     install_requires=[
         'fire-document@git+https://github.com/sugarush/fire-document@master',
         'fire-router@git+https://github.com/sugarush/fire-router@master',
         'fire-asynctest@git+https://github.com/sugarush/fire-asynctest@master',
         'fire-odm@git+https://github.com/sugarush/fire-odm@master',
-        'sanic'
+        'sanic',
+        'pyjwt',
+        'aioredis'
     ]
 )
