@@ -13,9 +13,10 @@ setup(
     ],
     description='A JSONAPI implementation.',
     install_requires=[
-        'fire_document@git+https://github.com/sugarush/fire-document@master#egg=fire-document',
-        'fire_router@git+https://github.com/sugarush/fire-router@master#egg=fire-router',
-        'fire_asynctest@git+https://github.com/sugarush/fire-asynctest@master#egg=fire-asynctest',
-        'fire_odm@git+https://github.com/sugarush/fire-odm@master#egg=fire-odm'
+        'fire-document@git+https://github.com/sugarush/fire-document@master',
+        'fire-router@git+https://github.com/sugarush/fire-router@master',
+        'fire-asynctest@git+https://github.com/sugarush/fire-asynctest@master',
+        'fire-odm@git+https://github.com/sugarush/fire-odm@master',
+        'sanic'
     ]
 )
