@@ -4,3 +4,4 @@
 __pycache__
 mongodb_data
 htmlcov
+*.pyc

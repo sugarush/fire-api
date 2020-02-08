@@ -1,9 +1,9 @@
 import json
 
-from fire_asynctest import AsyncTestCase
-from fire_document import Document
+from sugar_asynctest import AsyncTestCase
+from sugar_document import Document
 
-from fire_api import validate
+from sugar_api import validate
 
 
 async def handler(*args, **kargs):

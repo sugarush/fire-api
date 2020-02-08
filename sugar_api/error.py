@@ -1,4 +1,4 @@
-from fire_odm import Model, Field
+from sugar_odm import Model, Field
 
 
 class Links(Model):

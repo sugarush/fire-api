@@ -3,8 +3,6 @@ from uuid import uuid4
 import jwt
 from sanic import Blueprint
 
-from fire_odm import Model
-
 from . error import Error
 from . header import content_type, accept, jsonapi
 from . preflight import preflight

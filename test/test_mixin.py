@@ -1,10 +1,10 @@
 import json
 
-from fire_asynctest import AsyncTestCase
-from fire_document import Document
-from fire_odm import MongoDBModel, Field
+from sugar_asynctest import AsyncTestCase
+from sugar_document import Document
+from sugar_odm import MongoDBModel, Field
 
-from fire_api import JSONAPIMixin
+from sugar_api import JSONAPIMixin
 
 
 def decode(response):

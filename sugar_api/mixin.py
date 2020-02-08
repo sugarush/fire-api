@@ -10,8 +10,8 @@ from sanic import Blueprint
 from sanic.log import logger
 from websockets.exceptions import ConnectionClosedError
 
-from fire_document import Document
-from fire_router import Router
+from sugar_document import Document
+from sugar_router import Router
 
 from . acl import acl
 from . error import Error

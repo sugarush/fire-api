@@ -1,6 +1,6 @@
-from fire_asynctest import AsyncTestCase
+from sugar_asynctest import AsyncTestCase
 
-from fire_api.restrictions import _apply_restrictions, _get_value
+from sugar_api.restrictions import _apply_restrictions, _get_value
 
 
 class RestrictionsTest(AsyncTestCase):

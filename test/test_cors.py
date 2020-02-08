@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from fire_api import CORS
+from sugar_api import CORS
 
 
 class OriginsTest(TestCase):
