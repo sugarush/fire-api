@@ -208,7 +208,7 @@ class JSONAPIMixinTest(AsyncTestCase):
 
         response = decode(response)
 
-        self.assertEqual(response.errors[0].detail, 'No data found.')
+        self.assertEqual(len(response.data), 0)
 
     async def test_read_multiple_query(self):
 

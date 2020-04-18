@@ -463,6 +463,7 @@ class JSONAPIMixin(object):
 
                 if limit > 1000:
                     limit = 1000
+
                 count = 0
 
                 async for model in cls.find(query):
@@ -496,9 +497,6 @@ class JSONAPIMixin(object):
                     status = 500
                 )
                 return jsonapi({ 'errors': [ error.serialize() ] }, status=500)
-
-            if not models and not errors:
-                return jsonapi({ 'data': [ ] }, status=200)
 
             response = {
                 'data': list(map(lambda model: model.render(token), models)),
