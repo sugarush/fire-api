@@ -498,15 +498,7 @@ class JSONAPIMixin(object):
                 return jsonapi({ 'errors': [ error.serialize() ] }, status=500)
 
             if not models and not errors:
-                error = Error(
-                    title = 'Read Error',
-                    detail = 'No data found.',
-                    status = 404
-                )
-                return jsonapi({
-                    'data': [ ],
-                    'errors': [ error.serialize() ]
-                }, status=404)
+                return jsonapi({ 'data': [ ] }, status=204)
 
             response = {
                 'data': list(map(lambda model: model.render(token), models)),
