@@ -715,7 +715,7 @@ class JSONAPIMixin(object):
         @exists(cls)
         @socketacl('subscribe', cls)
         @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
-        async def subscribe(state, doc, id):
+        async def _subscribe(state, doc, id):
             if await cls.exists(id):
                 state.index[id] = True
                 await state.socket.send(json.dumps({
@@ -728,7 +728,7 @@ class JSONAPIMixin(object):
         @exists(cls)
         @socketacl('subscribe', cls)
         @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
-        async def unsubscribe(state, doc, id):
+        async def _unsubscribe(state, doc, id):
             if id in state.index:
                 del state.index[id]
                 await state.socket.send(json.dumps({
@@ -909,7 +909,7 @@ class JSONAPIMixin(object):
         @exists(cls)
         @socketacl('watch', cls)
         @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
-        async def watch(state, doc, id):
+        async def _watch(state, doc, id):
             model = cls({ 'id': id })
             await model.load()
             state.index[id] = asyncio.create_task(watch_changes(state, model))
@@ -918,7 +918,7 @@ class JSONAPIMixin(object):
         @exists(cls)
         @socketacl('watch', cls)
         @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
-        async def unwatch(state, doc, id):
+        async def _unwatch(state, doc, id):
             if id in state.index:
                 state.index[id].cancel()
                 del state.index[id]

@@ -42,7 +42,7 @@ async def status(state, doc):
 
 def exists(Model):
     def wrapper(handler):
-        async def decorator(*args, **kargs):
+        async def decorator(state, doc, *args, **kargs):
             id = kargs.get('id')
             if not id or not await Model.exists(id):
                 await state.socket.send(json.dumps({
@@ -51,6 +51,6 @@ def exists(Model):
                     'id': id
                 }))
             else:
-                return await handler(*args, **kargs)
+                return await handler(state, doc, *args, **kargs)
         return decorator
     return wrapper
