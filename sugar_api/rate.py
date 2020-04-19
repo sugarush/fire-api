@@ -59,7 +59,7 @@ def socketrate(limit, interval, namespace=None):
             f'ratelimit: {interval} not in {list(__intervals__.keys())}'
         )
     def wrapper(handler):
-        async def decorator(state, doc, **kargs):
+        async def decorator(state, doc, *args, **kargs):
             if interval is 'none':
                 return await handler(request, *args, **kargs)
 
@@ -85,6 +85,6 @@ def socketrate(limit, interval, namespace=None):
             else:
                 await redis.set(key, 1, expire=__intervals__[interval])
 
-            return await handler(request, *args, **kargs)
+            return await handler(state, doc, *args, **kargs)
         return decorator
     return wrapper
