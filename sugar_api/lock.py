@@ -32,6 +32,6 @@ async def release(id, uuid, Model):
     holder = await redis.get(f'lock:{id}')
     if holder and holder.decode() == uuid:
         await redis.delete(f'lock:{id}')
-        await redis.publish(Model._table, f'released:{Model._table}:{id}:{uuid}:{expire}')
+        await redis.publish(Model._table, f'released:{Model._table}:{id}:{uuid}')
         return True
     return False

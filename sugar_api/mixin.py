@@ -737,7 +737,6 @@ class JSONAPIMixin(object):
                     'id': id
                 }))
 
-        # call this function _acquire as to not overwrite existing acquire
         @router.acquire(f'/{cls._table}/<id>')
         @exists(cls)
         @socketacl('acquire', cls)
@@ -756,7 +755,6 @@ class JSONAPIMixin(object):
                     'id': id
                 }))
 
-        # call this function _release as to not overwrite existing release
         @router.release(f'/{cls._table}/<id>')
         @exists(cls)
         @socketacl('acquire', cls)
@@ -799,6 +797,8 @@ class JSONAPIMixin(object):
 
                 if len(components) == 5:
                     action, type, id, uuid, expire = components
+                if len(components) == 4:
+                    action, type, id, uuid = components
                 elif len(components) == 2:
                     action, id = components
                 else:
