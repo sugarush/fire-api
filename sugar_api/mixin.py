@@ -14,7 +14,6 @@ from sugar_document import Document
 from sugar_router import Router
 
 from . acl import acl, _check_acl
-from . acquire import acquire
 from . error import Error
 from . header import content_type, accept, jsonapi
 from . objectid import objectid
@@ -23,6 +22,7 @@ from . publish import publish
 from . rate import rate
 from . redis import Redis
 from . restrictions import set, _apply_restrictions
+from . seal import seal, acquire, release
 from . validate import validate
 from . webtoken import WebToken, webtoken
 
@@ -122,7 +122,7 @@ class JSONAPIMixin(object):
 
         if changes:
 
-            # XXX: only allow RethinkDBModels to use the changes api
+            # TODO: Only allow RethinkDBModels to use the changes API.
 
             @bp.websocket(f'{url}/changes')
             async def changes(request, socket):
@@ -176,8 +176,8 @@ class JSONAPIMixin(object):
         @rate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @acl('update', cls.__acl__, cls)
         @set(cls.__set__, cls)
-        @acquire
         @publish('update', cls._table)
+        @seal
         async def update(*args, **kargs):
             return await cls._update(*args, **kargs)
 
@@ -187,8 +187,8 @@ class JSONAPIMixin(object):
         @webtoken
         @rate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @acl('delete', cls.__acl__, cls)
-        @acquire
         @publish('delete', cls._table)
+        @seal
         async def delete(*args, **kargs):
             return await cls._delete(*args, **kargs)
 
@@ -770,7 +770,8 @@ class JSONAPIMixin(object):
                 del state.index[id]
 
         @router.acquire(f'/{cls._table}/<id>')
-        async def acquire(state, doc, id):
+        # call this function _acquire as to not overwrite existing acquire
+        async def _acquire(state, doc, id):
             if not await cls.exists(id):
                 await state.socket.send(json.dumps({
                     'action': 'document-not-found'
@@ -781,10 +782,11 @@ class JSONAPIMixin(object):
                     'action': 'acl-restricted'
                 }))
                 return None
-            await state.redis.publish(cls._table, f'acquired:{id}:{state.uuid}')
+            await acquire(id, state.uuid, cls)
 
         @router.release(f'/{cls._table}/<id>')
-        async def release(state, doc, id):
+        # call this function _release as to not overwrite existing release
+        async def _release(state, doc, id):
             if not await cls.exists(id):
                 await state.socket.send(json.dumps({
                     'action': 'document-not-found'
@@ -795,7 +797,7 @@ class JSONAPIMixin(object):
                     'action': 'acl-restricted'
                 }))
                 return None
-            await state.redis.publish(cls._table, f'released:{id}:{state.uuid}')
+            await release(id, state.uuid, cls)
 
         async def socket_reader(state):
             while True:
