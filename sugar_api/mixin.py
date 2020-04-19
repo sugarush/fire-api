@@ -743,13 +743,10 @@ class JSONAPIMixin(object):
         @socketacl('acquire', cls)
         @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         async def _acquire(state, doc, id):
-            timeout = 5
-            wait = 5
-            if doc.data and doc.data.timeout:
-                timeout = doc.data.timeout
-            if doc.data and doc.data.wait:
-                wait = doc.data.wait
-            if await acquire(id, state.uuid, cls, timeout, wait):
+            expire = 5
+            if doc.data and doc.data.attributes and doc.data.attributes.expire:
+                expire = doc.data.attributes.expire
+            if await acquire(id, state.uuid, cls, expire):
                 await state.socket.send(json.dumps({
                     'action': 'acquired',
                     'id': id
@@ -772,7 +769,7 @@ class JSONAPIMixin(object):
                 timeout = doc.data.timeout
             if doc.data and doc.data.wait:
                 wait = doc.data.wait
-            if await release(id, state.uuid, cls, timeout, wait):
+            if await release(id, state.uuid, cls):
                 await state.socket.send(json.dumps({
                     'action': 'released',
                     'id': id
@@ -804,14 +801,20 @@ class JSONAPIMixin(object):
             await conn.execute_pubsub('SUBSCRIBE', channel)
 
             async for message in channel.iter():
-                try:
-                    action, id, uuid = message.decode().split(':')
-                except ValueError as e:
-                    continue
+                components = message.decode().split(':')
 
-                try:
-                    action, id = message.decode().split(':')
-                except ValueError as e:
+                action = None
+                id = None
+                uuid = None
+
+                if len(components) == 3:
+                    action, id, uuid = components
+                elif len(components) == 2:
+                    action, id = components
+                else:
+                    await state.socket.send(json.dumps({
+                        'action': 'invalid-message'
+                    }))
                     continue
 
                 if id in state.index:

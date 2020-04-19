@@ -1,25 +1,37 @@
-from aioredis_lock import RedisLock, LockTimeoutError
+import asyncio
 
 from . redis import Redis
 
 
-async def acquire(id, uuid, Model, timeout=5, wait=None):
+async def acquire(id, uuid, Model, expire=5, delay=0.25, attempts=5):
     if not await Model.exists(id):
         return False
+    conn = await Redis.connect(lowlevel=True)
     redis = await Redis.connect()
-    try:
-        async with RedisLock(redis, f'lock:{id}', timeout, wait, uuid) as lock:
-            await redis.publish(Model._table, f'acquire:{id}:{uuid}')
+    _attempts = attempts
+    while _attempts:
+        holder = await redis.get(f'lock:{id}')
+        if holder:
+            holder = holder.decode()
+        if holder == uuid:
+            await redis.publish(Model._table, f'acquired:{id}:{uuid}')
             return True
-    except LockTimeoutError as e:
-        return False
+        if holder != uuid:
+            # NX means only set the key if it doesn't already exist
+            await conn.execute('SET', f'lock:{id}', uuid, 'NX', 'PX', expire * 1000)
+        if not _attempts == attempts:
+            # do not delay the first attempt, only subsequent attempts
+            await asyncio.sleep(delay)
+        _attempts -= 1
+    return False
 
-async def release(id, uuid, Model, timeout=5, wait=None):
+async def release(id, uuid, Model):
     if not await Model.exists(id):
         return False
     redis = await Redis.connect()
     holder = await redis.get(f'lock:{id}')
-    if holder == uuid:
-        await redis.publish(Model._table, f'release:{id}:{uuid}')
+    if holder and holder.decode() == uuid:
+        await redis.delete(f'lock:{id}')
+        await redis.publish(Model._table, f'released:{id}:{uuid}')
         return True
     return False
