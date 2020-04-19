@@ -13,7 +13,7 @@ def jsonapi(*args, **kargs):
         'Content-Type': __content_type__
     })
     kargs['headers'] = headers
-    kargs['defalut'] = lambda date: date.isoformat()
+    kargs['default'] = lambda date: date.isoformat()
     return json(*args, **kargs)
 
 def content_type(handler):

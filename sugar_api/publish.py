@@ -1,4 +1,4 @@
-from ujson import loads
+from json import loads
 
 from . redis import Redis
 
