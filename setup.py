@@ -19,6 +19,7 @@ setup(
         'sugar-odm@git+https://github.com/sugarush/sugar-odm@master',
         'sanic',
         'pyjwt',
-        'aioredis'
+        'aioredis',
+        'aioredis-lock'
     ]
 )

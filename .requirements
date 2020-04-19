@@ -6,3 +6,4 @@ git+https://github.com/sugarush/sugar-odm@master
 pyjwt
 sanic
 aioredis
+aioredis-lock

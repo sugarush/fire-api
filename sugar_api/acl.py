@@ -18,6 +18,17 @@ def acl(action, acl, Model=None):
         return decorator
     return wrapper
 
+def socketacl(action, Model):
+    async def decorator(*args, **kargs):
+        id = kargs.get('id')
+        if not await _check_acl(action, Model.__acl__, state.token, id, Model):
+            await state.socket.send(json.dumps({
+                'action': 'acl-restricted'
+            }))
+        else:
+            await handler(*args, **kargs)
+    return decorator
+
 def _check_action(action, actions):
     if action in actions:
         return True

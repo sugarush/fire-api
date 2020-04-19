@@ -52,3 +52,39 @@ def rate(limit, interval, namespace=None):
             return await handler(request, *args, **kargs)
         return decorator
     return wrapper
+
+def socketrate(limit, interval, namespace=None):
+    if not interval in __intervals__:
+        raise Exception(
+            f'ratelimit: {interval} not in {list(__intervals__.keys())}'
+        )
+    def wrapper(handler):
+        async def decorator(state, doc, **kargs):
+            if interval is 'none':
+                return await handler(request, *args, **kargs)
+
+            data = (state.token or { }).get('data', { })
+            id = data.get('id')
+
+            redis = await Redis.connect()
+
+            key = f'{id or state.request.ip}:{namespace or state.request.path}'
+
+            count = await redis.get(key) or 0
+
+            if int(count) >= limit:
+                await state.socket.send(json.dumps({
+                    'action': 'rate-limit',
+                    'interval': interval,
+                    'limit': limit
+                }))
+                return None
+
+            if await redis.exists(key):
+                await redis.incr(key)
+            else:
+                await redis.set(key, 1, expire=__intervals__[interval])
+
+            return await handler(request, *args, **kargs)
+        return decorator
+    return wrapper
