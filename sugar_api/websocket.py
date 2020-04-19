@@ -1,3 +1,5 @@
+import jwt
+
 from . acl import _check_acl
 
 async def authenticate(state, doc):
