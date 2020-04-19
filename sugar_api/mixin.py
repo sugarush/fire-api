@@ -726,7 +726,7 @@ class JSONAPIMixin(object):
         # call this function _acquire as to not overwrite existing acquire
         @router.acquire(f'/{cls._table}/<id>')
         @exists(cls)
-        @socketrate(*(cs.__rate__ or [ 0, 'none' ]), namespace=cls._table)
+        @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @socketacl('acquire', cls)
         async def _acquire(state, doc, id):
             timeout = 5
