@@ -25,7 +25,7 @@ async def authenticate(state, doc):
 
 def exists(Model):
     def wrapper(handler):
-        async def decorater(*args, **kargs):
+        async def decorator(*args, **kargs):
             id = kargs.get('id')
             if not id or not await Model.exists(id):
                 await state.socket.send(json.dumps({
