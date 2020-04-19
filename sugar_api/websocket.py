@@ -51,6 +51,6 @@ def exists(Model):
                     'id': id
                 }))
             else:
-                await handler(*args, **kargs)
+                return await handler(*args, **kargs)
         return decorator
     return wrapper
