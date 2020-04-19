@@ -14,6 +14,7 @@ from sugar_document import Document
 from sugar_router import Router
 
 from . acl import acl, _check_acl
+from . acquire import acquire
 from . error import Error
 from . header import content_type, accept, jsonapi
 from . objectid import objectid
@@ -104,7 +105,7 @@ class JSONAPIMixin(object):
         return model
 
     @classmethod
-    def resource(cls, *args, notify=False, changes=False, **kargs):
+    def resource(cls, *args, pubsub=False, changes=False, **kargs):
 
         if not len(args) > 0:
             args = [ cls._table ]
@@ -113,13 +114,15 @@ class JSONAPIMixin(object):
 
         url = '/{path}'.format(path=cls._table)
 
-        if notify:
+        if pubsub:
 
-            @bp.websocket(f'{url}/notify')
-            async def notify(request, socket):
-                return await cls._notify(request, socket)
+            @bp.websocket(f'{url}/pubsub')
+            async def pubsub(request, socket):
+                return await cls._pubsub(request, socket)
 
         if changes:
+
+            # XXX: only allow RethinkDBModels to use the changes api
 
             @bp.websocket(f'{url}/changes')
             async def changes(request, socket):
@@ -173,6 +176,7 @@ class JSONAPIMixin(object):
         @rate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @acl('update', cls.__acl__, cls)
         @set(cls.__set__, cls)
+        @acquire
         @publish('update', cls._table)
         async def update(*args, **kargs):
             return await cls._update(*args, **kargs)
@@ -183,6 +187,7 @@ class JSONAPIMixin(object):
         @webtoken
         @rate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @acl('delete', cls.__acl__, cls)
+        @acquire
         @publish('delete', cls._table)
         async def delete(*args, **kargs):
             return await cls._delete(*args, **kargs)
@@ -661,7 +666,7 @@ class JSONAPIMixin(object):
         return jsonapi(response, status=200)
 
     @classmethod
-    async def _notify(cls, request, socket):
+    async def _pubsub(cls, request, socket):
 
         state = type('', (), {})()
 
@@ -669,111 +674,18 @@ class JSONAPIMixin(object):
         #state.channel = aioredis.Channel(cls._table, is_pattern=False)
         #await state.conn.execute_pubsub('SUBSCRIBE', state.channel)
 
-        state.socket = socket
-        state.uuid = str(uuid4())
-        state.index = { }
-
-        router = Router(methods=[ 'subscribe', 'unsubscribe' ])
-
-        @router.subscribe(f'/{cls._table}/<id>')
-        async def subscribe(state, doc, id):
-            if await cls.exists(id):
-                state.index[id] = True
-
-        @router.unsubscribe(f'/{cls._table}/<id>')
-        async def unsubscribe(state, doc, id):
-            if id in state.index:
-                del state.index[id]
-
-        async def socket_reader(state):
-            while True:
-                try:
-                    data = json.loads(await socket.recv())
-                except json.JSONDecodeError as e:
-                    logger.info(str(e), exc_info=True)
-                    continue
-                except ConnectionClosedError as e:
-                    logger.info(str(e))
-                    break
-
-                doc = Document(data)
-
-                await router.emit(doc.action, doc.path, state, doc)
-
-        async def socket_writer(state):
-            conn = await aioredis.create_connection(Redis.default_host)
-            channel = aioredis.Channel(cls._table, is_pattern=False)
-            await conn.execute_pubsub('SUBSCRIBE', channel)
-
-            async for message in channel.iter():
-                try:
-                    action, id = message.decode().split(':')
-                except ValueError as e:
-                    continue
-
-                if id in state.index:
-                    await state.socket.send(json.dumps({
-                        'action': action,
-                        'id': id
-                    }))
-
-        await asyncio.gather(socket_reader(state), socket_writer(state))
-
-    @classmethod
-    async def _changes(cls, request, socket):
-        state = type('', (), {})()
+        state.redis = await Redis.connect()
 
         state.socket = socket
         state.uuid = str(uuid4())
         state.index = { }
         state.token = None
 
-        async def watch_changes(state, model):
+        await state.socket.send(json.dumps({
+            'client': state.uuid
+        }))
 
-            if not await _check_acl('changes', cls.__acl__, state.token, model.id, model.__class__):
-                await state.socket.send(json.dumps({
-                    'action': 'acl-restricted'
-                }))
-                return None
-
-            token_data = state.token.get('data', { })
-            token_id = token_data.get('id')
-            token_groups = token_data.get('groups')
-
-            groups = copy(token_groups)
-
-            if model.id == token_id:
-                groups.append('self')
-
-            model_data = model.serialize()
-
-            async for change in await model.changes():
-
-                if change['new_val'] is None:
-                    await state.socket.send(json.dumps({
-                        'action': 'delete',
-                        'id': model.id,
-                        'type': model._table
-                    }))
-                    state.index[model.id].cancel()
-
-                attributes = change['new_val']
-                del attributes['id']
-
-                _apply_restrictions(attributes, cls.__get__, groups, [ ], [ ], model_data, token_id)
-
-                if attributes:
-                    model.update(attributes)
-                    await state.socket.send(json.dumps({
-                        'action': 'change',
-                        'id': model.id,
-                        'type': model._table,
-                        'data': {
-                            'attributes': attributes
-                        }
-                    }))
-
-        router = Router(methods=[ 'authenticate', 'deauthenticate', 'watch', 'unwatch' ])
+        router = Router(methods=[ 'authenticate', 'deauthenticate', 'status', 'subscribe', 'unsubscribe', 'acquire', 'release' ])
 
         @router.authenticate(f'/{cls._table}')
         async def authenticate(state, doc):
@@ -821,8 +733,235 @@ class JSONAPIMixin(object):
                 del state.index[id]
             state.token = None
 
+        @router.status(f'/{cls._table}')
+        async def status(state, doc):
+            await state.socket.send(json.dumps({
+                'action': 'authorized' if state.token else 'unauthorized'
+            }))
+
+        @router.subscribe(f'/{cls._table}/<id>')
+        async def subscribe(state, doc, id):
+            if not await cls.exists(id):
+                await state.socket.send(json.dumps({
+                    'action': 'document-not-found'
+                }))
+                return None
+            if not await _check_acl('subscribe', cls.__acl__, state.token, id, cls):
+                await state.socket.send(json.dumps({
+                    'action': 'acl-restricted'
+                }))
+                return None
+            if await cls.exists(id):
+                state.index[id] = True
+
+        @router.unsubscribe(f'/{cls._table}/<id>')
+        async def unsubscribe(state, doc, id):
+            if not await cls.exists(id):
+                await state.socket.send(json.dumps({
+                    'action': 'document-not-found'
+                }))
+                return None
+            if not await _check_acl('subscribe', cls.__acl__, state.token, id, cls):
+                await state.socket.send(json.dumps({
+                    'action': 'acl-restricted'
+                }))
+                return None
+            if id in state.index:
+                del state.index[id]
+
+        @router.acquire(f'/{cls._table}/<id>')
+        async def acquire(state, doc, id):
+            if not await cls.exists(id):
+                await state.socket.send(json.dumps({
+                    'action': 'document-not-found'
+                }))
+                return None
+            if not await _check_acl('acquire', cls.__acl__, state.token, id, cls):
+                await state.socket.send(json.dumps({
+                    'action': 'acl-restricted'
+                }))
+                return None
+            await state.redis.publish(cls._table, f'acquired:{id}:{state.uuid}')
+
+        @router.release(f'/{cls._table}/<id>')
+        async def release(state, doc, id):
+            if not await cls.exists(id):
+                await state.socket.send(json.dumps({
+                    'action': 'document-not-found'
+                }))
+                return None
+            if not await _check_acl('acquire', cls.__acl__, state.token, id, cls):
+                await state.socket.send(json.dumps({
+                    'action': 'acl-restricted'
+                }))
+                return None
+            await state.redis.publish(cls._table, f'released:{id}:{state.uuid}')
+
+        async def socket_reader(state):
+            while True:
+                try:
+                    data = json.loads(await socket.recv())
+                except json.JSONDecodeError as e:
+                    logger.info(str(e), exc_info=True)
+                    continue
+                except ConnectionClosedError as e:
+                    logger.info(str(e))
+                    break
+
+                doc = Document(data)
+
+                await router.emit(doc.action, doc.path, state, doc)
+
+        async def socket_writer(state):
+            conn = await aioredis.create_connection(Redis.default_host)
+            channel = aioredis.Channel(cls._table, is_pattern=False)
+            await conn.execute_pubsub('SUBSCRIBE', channel)
+
+            async for message in channel.iter():
+                try:
+                    action, id, uuid = message.decode().split(':')
+                except ValueError as e:
+                    continue
+
+                try:
+                    action, id = message.decode().split(':')
+                except ValueError as e:
+                    continue
+
+                if id in state.index:
+                    data = { 'action': action, 'id': id }
+                    if uuid:
+                        data.update({
+                            'client': uuid
+                        })
+                    await state.socket.send(json.dumps(data))
+
+        await asyncio.gather(socket_reader(state), socket_writer(state))
+
+    @classmethod
+    async def _changes(cls, request, socket):
+        state = type('', (), {})()
+
+        state.socket = socket
+        state.uuid = str(uuid4())
+        state.index = { }
+        state.token = None
+
+        await state.socket.send(json.dumps({
+            'client': state.uuid
+        }))
+
+        async def watch_changes(state, model):
+
+            if not await _check_acl('changes', cls.__acl__, state.token, model.id, cls):
+                await state.socket.send(json.dumps({
+                    'action': 'acl-restricted'
+                }))
+                return None
+
+            token_data = state.token.get('data', { })
+            token_id = token_data.get('id')
+            token_groups = token_data.get('groups')
+
+            groups = copy(token_groups)
+
+            if model.id == token_id:
+                groups.append('self')
+
+            model_data = model.serialize()
+
+            async for change in await model.changes():
+
+                if change['new_val'] is None:
+                    await state.socket.send(json.dumps({
+                        'action': 'delete',
+                        'id': model.id,
+                        'type': model._table
+                    }))
+                    state.index[model.id].cancel()
+
+                attributes = change['new_val']
+                del attributes['id']
+
+                _apply_restrictions(attributes, cls.__get__, groups, [ ], [ ], model_data, token_id)
+
+                if attributes:
+                    model.update(attributes)
+                    await state.socket.send(json.dumps({
+                        'action': 'change',
+                        'id': model.id,
+                        'type': model._table,
+                        'data': {
+                            'attributes': attributes
+                        }
+                    }))
+
+        router = Router(methods=[ 'authenticate', 'deauthenticate', 'status', 'watch', 'unwatch' ])
+
+        @router.authenticate(f'/{cls._table}')
+        async def authenticate(state, doc):
+            try:
+                state.token = jwt.decode(doc.data.attributes.token, WebToken.get_secret(),
+                    algorithms=[WebToken.get_algolithm()],
+                    options=WebToken.get_options()
+                )
+            except jwt.ExpiredSignatureError:
+                error = Error(
+                    title = 'Invalid Token Error',
+                    detail = 'The token has expired.',
+                    status = 403
+                )
+                await state.socket.send(json.dumps({
+                    'errors': [ error.serialize() ]
+                }))
+            except jwt.ImmatureSignatureError:
+                error = Error(
+                    title = 'Invalid Token Error',
+                    detail = 'The token is not yet valid.',
+                    status = 403
+                )
+                await state.socket.send(json.dumps({
+                    'errors': [ error.serialize() ]
+                }))
+            except Exception as e:
+                error = Error(
+                    title = 'Invalid Authorization Header',
+                    detail = str(e),
+                    status = 403
+                )
+                await state.socket.send(json.dumps({
+                    'errors': [ error.serialize() ]
+                }))
+            else:
+                await state.socket.send(json.dumps({
+                    'action': 'authorized'
+                }))
+
+        @router.deauthenticate(f'/{cls._table}')
+        async def deauthenticate(state, doc):
+            for id in state.index:
+                state.index[id].cancel()
+                del state.index[id]
+            state.token = None
+
+        @router.status(f'/{cls._table}')
+        async def status(state, doc):
+            await state.socket.send(json.dumps({
+                'action': 'authorized' if state.token else 'unauthorized'
+            }))
+
         @router.watch(f'/{cls._table}/<id>')
         async def watch(state, doc, id):
+            if not await cls.exists(id):
+                await state.socket.send(json.dumps({
+                    'action': 'document-not-found'
+                }))
+                return None
+            if not await _check_acl('watch', cls.__acl__, state.token, id, cls):
+                await state.socket.send(json.dumps({
+                    'action': 'acl-restricted'
+                }))
+                return None
             if await cls.exists(id):
                 model = cls({ 'id': id })
                 await model.load()
@@ -830,6 +969,16 @@ class JSONAPIMixin(object):
 
         @router.unwatch(f'/{cls._table}/<id>')
         async def unwatch(state, doc, id):
+            if not await cls.exists(id):
+                await state.socket.send(json.dumps({
+                    'action': 'document-not-found'
+                }))
+                return None
+            if not await _check_acl('unwatch', cls.__acl__, state.token, id, cls):
+                await state.socket.send(json.dumps({
+                    'action': 'acl-restricted'
+                }))
+                return None
             if id in state.index:
                 state.index[id].cancel()
                 del state.index[id]
