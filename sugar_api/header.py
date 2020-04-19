@@ -14,6 +14,7 @@ def jsonapi(*args, **kargs):
     })
     kargs['headers'] = headers
     kargs['default'] = lambda date: date.isoformat()
+    kargs['separators'] = (',', ':')
     return json(*args, **kargs)
 
 def content_type(handler):
