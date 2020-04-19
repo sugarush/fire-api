@@ -744,14 +744,13 @@ class JSONAPIMixin(object):
         @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         async def _acquire(state, doc, id):
             expire = 5
-            if doc.data and doc.data.attributes and doc.data.attributes.expire:
+            delay = 1
+            attempts = 5
+            if doc.data and doc.data.attributes:
                 expire = doc.data.attributes.expire
-            if await acquire(id, state.uuid, cls, expire):
-                await state.socket.send(json.dumps({
-                    'action': 'acquired',
-                    'id': id
-                }))
-            else:
+                delay = doc.data.attributes.delay
+                attempts = doc.data.attributes.attempts
+            if not await acquire(id, state.uuid, cls, expire, delay, attempts):
                 await state.socket.send(json.dumps({
                     'action': 'acquire-failed',
                     'id': id
@@ -763,18 +762,7 @@ class JSONAPIMixin(object):
         @socketacl('acquire', cls)
         @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         async def _release(state, doc, id):
-            timeout = 5
-            wait = 5
-            if doc.data and doc.data.timeout:
-                timeout = doc.data.timeout
-            if doc.data and doc.data.wait:
-                wait = doc.data.wait
-            if await release(id, state.uuid, cls):
-                await state.socket.send(json.dumps({
-                    'action': 'released',
-                    'id': id
-                }))
-            else:
+            if not await release(id, state.uuid, cls):
                 await state.socket.send(json.dumps({
                     'action': 'release-failed',
                     'id': id
@@ -806,9 +794,10 @@ class JSONAPIMixin(object):
                 action = None
                 id = None
                 uuid = None
+                type = None
 
-                if len(components) == 3:
-                    action, id, uuid = components
+                if len(components) == 4:
+                    action, type, id, uuid = components
                 elif len(components) == 2:
                     action, id = components
                 else:
@@ -821,6 +810,8 @@ class JSONAPIMixin(object):
                     data = { 'action': action, 'id': id }
                     if uuid:
                         data.update({ 'client': uuid })
+                    if type:
+                        data.update({ 'type': type })
                     await state.socket.send(json.dumps(data))
 
         await asyncio.gather(socket_reader(state), socket_writer(state))

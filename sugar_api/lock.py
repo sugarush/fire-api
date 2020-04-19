@@ -3,7 +3,7 @@ import asyncio
 from . redis import Redis
 
 
-async def acquire(id, uuid, Model, expire=5, delay=0.25, attempts=5):
+async def acquire(id, uuid, Model, expire=5, delay=1, attempts=5):
     if not await Model.exists(id):
         return False
     conn = await Redis.connect(lowlevel=True)
@@ -14,7 +14,7 @@ async def acquire(id, uuid, Model, expire=5, delay=0.25, attempts=5):
         if holder:
             holder = holder.decode()
         if holder == uuid:
-            await redis.publish(Model._table, f'acquired:{id}:{uuid}')
+            await redis.publish(Model._table, f'acquired:{Model._table}:{id}:{uuid}')
             return True
         if holder != uuid:
             # NX means only set the key if it doesn't already exist
@@ -32,6 +32,6 @@ async def release(id, uuid, Model):
     holder = await redis.get(f'lock:{id}')
     if holder and holder.decode() == uuid:
         await redis.delete(f'lock:{id}')
-        await redis.publish(Model._table, f'released:{id}:{uuid}')
+        await redis.publish(Model._table, f'released:{Model._table}:{id}:{uuid}')
         return True
     return False
