@@ -9,6 +9,7 @@ services:
 install:
   - pip install -r .requirements
   - pip install coverage codecov
+  - pip uninstall ujson
 
 script:
   - coverage run --source "sugar_api" --module "unittest" discover --verbose "test"
