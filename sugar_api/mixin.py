@@ -20,7 +20,7 @@ from . lock import acquire, release
 from . objectid import objectid
 from . preflight import preflight
 from . publish import publish
-from . rate import rate
+from . rate import rate, socketrate
 from . redis import Redis
 from . restrictions import set, _apply_restrictions
 from . validate import validate
