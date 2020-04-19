@@ -745,10 +745,12 @@ class JSONAPIMixin(object):
             expire = 5
             delay = 1
             attempts = 5
-            if doc.data and doc.data.attributes:
-                expire = doc.data.attributes.expire
-                delay = doc.data.attributes.delay
-                attempts = doc.data.attributes.attempts
+            if doc.expire:
+                expire = doc.expire
+            if doc.delay:
+                delay = doc.delay
+            if doc.attempts:
+                attempts = doc.attempts
             if not await acquire(id, state.uuid, cls, expire, delay, attempts):
                 await state.socket.send(json.dumps({
                     'action': 'acquire-failed',
@@ -802,6 +804,7 @@ class JSONAPIMixin(object):
                 elif len(components) == 2:
                     action, id = components
                 else:
+                    # TODO: Maybe remove these three lines later?
                     await state.socket.send(json.dumps({
                         'action': 'invalid-message'
                     }))
