@@ -713,8 +713,8 @@ class JSONAPIMixin(object):
 
         @router.subscribe(f'/{cls._table}/<id>')
         @exists(cls)
-        @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @socketacl('subscribe', cls)
+        @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         async def subscribe(state, doc, id):
             if await cls.exists(id):
                 state.index[id] = True
@@ -726,8 +726,8 @@ class JSONAPIMixin(object):
 
         @router.unsubscribe(f'/{cls._table}/<id>')
         @exists(cls)
-        @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @socketacl('subscribe', cls)
+        @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         async def unsubscribe(state, doc, id):
             if id in state.index:
                 del state.index[id]
@@ -740,8 +740,8 @@ class JSONAPIMixin(object):
         # call this function _acquire as to not overwrite existing acquire
         @router.acquire(f'/{cls._table}/<id>')
         @exists(cls)
-        @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @socketacl('acquire', cls)
+        @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         async def _acquire(state, doc, id):
             timeout = 5
             wait = 5
@@ -763,8 +763,8 @@ class JSONAPIMixin(object):
         # call this function _release as to not overwrite existing release
         @router.release(f'/{cls._table}/<id>')
         @exists(cls)
-        @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @socketacl('acquire', cls)
+        @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         async def _release(state, doc, id):
             timeout = 5
             wait = 5
@@ -907,8 +907,8 @@ class JSONAPIMixin(object):
 
         @router.watch(f'/{cls._table}/<id>')
         @exists(cls)
-        @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @socketacl('watch', cls)
+        @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         async def watch(state, doc, id):
             model = cls({ 'id': id })
             await model.load()
@@ -916,8 +916,8 @@ class JSONAPIMixin(object):
 
         @router.unwatch(f'/{cls._table}/<id>')
         @exists(cls)
-        @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @socketacl('watch', cls)
+        @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         async def unwatch(state, doc, id):
             if id in state.index:
                 state.index[id].cancel()
