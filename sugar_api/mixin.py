@@ -13,7 +13,7 @@ from websockets.exceptions import ConnectionClosedError
 from sugar_document import Document
 from sugar_router import Router
 
-from . acl import acl, _check_acl
+from . acl import acl, socketacl, _check_acl
 from . error import Error
 from . header import content_type, accept, jsonapi
 from . lock import acquire, release
@@ -24,7 +24,7 @@ from . rate import rate
 from . redis import Redis
 from . restrictions import set, _apply_restrictions
 from . validate import validate
-from . websocket import authenticate, exists, socketacl
+from . websocket import authenticate, exists
 from . webtoken import WebToken, webtoken
 
 
@@ -712,11 +712,6 @@ class JSONAPIMixin(object):
         @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @socketacl('subscribe', cls)
         async def subscribe(state, doc, id):
-            if not await _check_acl('subscribe', cls.__acl__, state.token, id, cls):
-                await state.socket.send(json.dumps({
-                    'action': 'acl-restricted'
-                }))
-                return None
             if await cls.exists(id):
                 state.index[id] = True
 
@@ -725,11 +720,6 @@ class JSONAPIMixin(object):
         @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         @socketacl('subscribe', cls)
         async def unsubscribe(state, doc, id):
-            if not await _check_acl('subscribe', cls.__acl__, state.token, id, cls):
-                await state.socket.send(json.dumps({
-                    'action': 'acl-restricted'
-                }))
-                return None
             if id in state.index:
                 del state.index[id]
 

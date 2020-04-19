@@ -1,6 +1,6 @@
 from aioredis_lock import RedisLock, LockTimeoutError
 
-from sugar_api import Redis
+from . redis import Redis
 
 
 async def acquire(id, uuid, Model, timeout=5, wait=None):
@@ -19,7 +19,7 @@ async def release(id, uuid, Model, timeout=5, wait=None):
         return False
     redis = await Redis.connect()
     holder = await redis.get(f'lock:{id}')
-    if holder = uuid:
+    if holder == uuid:
         await redis.publish(Model._table, f'release:{id}:{uuid}')
         return True
     return False
