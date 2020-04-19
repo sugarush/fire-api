@@ -121,9 +121,6 @@ class JSONAPIMixin(object):
 
         if changes:
 
-            if not type(self) == 'RethinkDBModel':
-                raise Exception('JSONAPIMixin.resource: Only RethinkDBModels can stream changes.')
-
             @bp.websocket(f'{url}/changes')
             async def changes(request, socket):
                 return await cls._changes(request, socket)
@@ -817,7 +814,7 @@ class JSONAPIMixin(object):
                     'action': 'authorized'
                 }))
 
-        @router.deauthenticate(f'/{cls._table})
+        @router.deauthenticate(f'/{cls._table}')
         async def deauthenticate(state, doc):
             for id in state.index:
                 state.index[id].cancel()
