@@ -795,9 +795,10 @@ class JSONAPIMixin(object):
                 id = None
                 uuid = None
                 type = None
+                expire = None
 
-                if len(components) == 4:
-                    action, type, id, uuid = components
+                if len(components) == 5:
+                    action, type, id, uuid, expire = components
                 elif len(components) == 2:
                     action, id = components
                 else:
@@ -812,6 +813,8 @@ class JSONAPIMixin(object):
                         data.update({ 'client': uuid })
                     if type:
                         data.update({ 'type': type })
+                    if expire:
+                        data.update({ 'expire': expire })
                     await state.socket.send(json.dumps(data))
 
         await asyncio.gather(socket_reader(state), socket_writer(state))
