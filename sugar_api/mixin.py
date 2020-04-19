@@ -24,7 +24,7 @@ from . rate import rate, socketrate
 from . redis import Redis
 from . restrictions import set, _apply_restrictions
 from . validate import validate
-from . websocket import authenticate, exists
+from . websocket import authenticate, deauthenticate, status, exists
 from . webtoken import WebToken, webtoken
 
 
@@ -686,7 +686,15 @@ class JSONAPIMixin(object):
             'id': state.uuid
         }))
 
-        router = Router(methods=[ 'authenticate', 'deauthenticate', 'status', 'subscribe', 'unsubscribe', 'acquire', 'release' ])
+        router = Router(methods=[
+            'authenticate',
+            'deauthenticate',
+            'status',
+            'subscribe',
+            'unsubscribe',
+            'acquire',
+            'release'
+        ])
 
         @router.authenticate(f'/{cls._table}')
         @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
@@ -695,17 +703,13 @@ class JSONAPIMixin(object):
 
         @router.deauthenticate(f'/{cls._table}')
         @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
-        async def deauthenticate(state, doc):
-            for id in state.index:
-                del state.index[id]
-            state.token = None
+        async def _deauthenticate(state, doc):
+            await deauthenticate(state, doc)
 
         @router.status(f'/{cls._table}')
         @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
-        async def status(state, doc):
-            await state.socket.send(json.dumps({
-                'action': 'authorized' if state.token else 'unauthorized'
-            }))
+        async def _status(state, doc):
+            await status(state, doc)
 
         @router.subscribe(f'/{cls._table}/<id>')
         @exists(cls)
@@ -714,6 +718,11 @@ class JSONAPIMixin(object):
         async def subscribe(state, doc, id):
             if await cls.exists(id):
                 state.index[id] = True
+                await state.socket.send(json.dumps({
+                    'action': 'subscribed',
+                    'type': cls._table,
+                    'id': id
+                }))
 
         @router.unsubscribe(f'/{cls._table}/<id>')
         @exists(cls)
@@ -722,6 +731,11 @@ class JSONAPIMixin(object):
         async def unsubscribe(state, doc, id):
             if id in state.index:
                 del state.index[id]
+                await state.socket.send(json.dumps({
+                    'action': 'unsubscribed',
+                    'type': cls._table,
+                    'id': id
+                }))
 
         # call this function _acquire as to not overwrite existing acquire
         @router.acquire(f'/{cls._table}/<id>')
@@ -742,7 +756,8 @@ class JSONAPIMixin(object):
                 }))
             else:
                 await state.socket.send(json.dumps({
-                    'action': 'acquire-failed'
+                    'action': 'acquire-failed',
+                    'id': id
                 }))
 
         # call this function _release as to not overwrite existing release
@@ -764,7 +779,8 @@ class JSONAPIMixin(object):
                 }))
             else:
                 await state.socket.send(json.dumps({
-                    'action': 'release-failed'
+                    'action': 'release-failed',
+                    'id': id
                 }))
 
         async def socket_reader(state):
@@ -866,7 +882,13 @@ class JSONAPIMixin(object):
                         }
                     }))
 
-        router = Router(methods=[ 'authenticate', 'deauthenticate', 'status', 'watch', 'unwatch' ])
+        router = Router(methods=[
+            'authenticate',
+            'deauthenticate',
+            'status',
+            'watch',
+            'unwatch'
+        ])
 
         @router.authenticate(f'/{cls._table}')
         @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
@@ -875,19 +897,13 @@ class JSONAPIMixin(object):
 
         @router.deauthenticate(f'/{cls._table}')
         @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
-        async def deauthenticate(state, doc):
-            for id in state.index:
-                state.index[id].cancel()
-                del state.index[id]
-            state.token = None
+        async def _deauthenticate(state, doc):
+            await deauthenticate(state, doc)
 
         @router.status(f'/{cls._table}')
         @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
-        async def status(state, doc):
-            await state.socket.send(json.dumps({
-                'action': 'status',
-                'authentication': 'authorized' if state.token else 'unauthorized'
-            }))
+        async def _status(state, doc):
+            await status(state, doc)
 
         @router.watch(f'/{cls._table}/<id>')
         @exists(cls)

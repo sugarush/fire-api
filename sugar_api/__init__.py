@@ -10,4 +10,5 @@ from . rate import rate, socketrate
 from . redis import Redis
 from . scope import scope
 from . validate import validate
+from . websocket import authenticate, deauthenticate, status, exists
 from . webtoken import WebToken, webtoken

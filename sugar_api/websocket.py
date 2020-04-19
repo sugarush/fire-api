@@ -27,6 +27,19 @@ async def authenticate(state, doc):
             'action': 'authenticated'
         }))
 
+async def deauthenticate(state, doc):
+    for id in state.index:
+        del state.index[id]
+    state.token = None
+    await state.socket.send(json.dumps({
+        'action': 'deauthenticated'
+    }))
+
+async def status(state, doc):
+    await state.socket.send(json.dumps({
+        'action': 'authenticated' if state.token else 'deauthenticated'
+    }))
+
 def exists(Model):
     def wrapper(handler):
         async def decorator(*args, **kargs):
