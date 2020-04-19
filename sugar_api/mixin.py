@@ -13,7 +13,7 @@ from websockets.exceptions import ConnectionClosedError
 from sugar_document import Document
 from sugar_router import Router
 
-from . acl import acl
+from . acl import acl, _check_acl
 from . error import Error
 from . header import content_type, accept, jsonapi
 from . objectid import objectid
@@ -104,7 +104,7 @@ class JSONAPIMixin(object):
         return model
 
     @classmethod
-    def resource(cls, *args, realtime=False, **kargs):
+    def resource(cls, *args, notify=False, changes=False, **kargs):
 
         if not len(args) > 0:
             args = [ cls._table ]
@@ -113,10 +113,20 @@ class JSONAPIMixin(object):
 
         url = '/{path}'.format(path=cls._table)
 
-        if realtime:
-            @bp.websocket(f'{url}/realtime')
-            async def realtime(request, socket):
-                return await cls._realtime(request, socket)
+        if notify:
+
+            @bp.websocket(f'{url}/notify')
+            async def notify(request, socket):
+                return await cls._notify(request, socket)
+
+        if changes:
+
+            if not type(self) == 'RethinkDBModel':
+                raise Exception('JSONAPIMixin.resource: Only RethinkDBModels can stream changes.')
+
+            @bp.websocket(f'{url}/changes')
+            async def changes(request, socket):
+                return await cls._changes(request, socket)
 
         @bp.options(url)
         async def options(*args, **kargs):
@@ -654,7 +664,7 @@ class JSONAPIMixin(object):
         return jsonapi(response, status=200)
 
     @classmethod
-    async def _realtime(cls, request, socket):
+    async def _notify(cls, request, socket):
 
         state = type('', (), {})()
 
@@ -668,12 +678,12 @@ class JSONAPIMixin(object):
 
         router = Router(methods=[ 'subscribe', 'unsubscribe' ])
 
-        @router.subscribe(f'/v1/{cls._table}/<id>')
+        @router.subscribe(f'/{cls._table}/<id>')
         async def subscribe(state, doc, id):
             if await cls.exists(id):
                 state.index[id] = True
 
-        @router.unsubscribe(f'/v1/{cls._table}/<id>')
+        @router.unsubscribe(f'/{cls._table}/<id>')
         async def unsubscribe(state, doc, id):
             if id in state.index:
                 del state.index[id]
@@ -711,3 +721,135 @@ class JSONAPIMixin(object):
                     }))
 
         await asyncio.gather(socket_reader(state), socket_writer(state))
+
+    @classmethod
+    async def _changes(cls, request, socket):
+        state = type('', (), {})()
+
+        state.socket = socket
+        state.uuid = str(uuid4())
+        state.index = { }
+        state.token = None
+
+        async def watch_changes(state, model):
+
+            if not await _check_acl('changes', cls.__acl__, state.token, model.id, model.__class__):
+                await state.socket.send(json.dumps({
+                    'action': 'acl-restricted'
+                }))
+                return None
+
+            token_data = state.token.get('data', { })
+            token_id = token_data.get('id')
+            token_groups = token_data.get('groups')
+
+            groups = copy(token_groups)
+
+            if model.id == token_id:
+                groups.append('self')
+
+            model_data = model.serialize()
+
+            async for change in await model.changes():
+
+                if change['new_val'] is None:
+                    await state.socket.send(json.dumps({
+                        'action': 'delete',
+                        'id': model.id,
+                        'type': model._table
+                    }))
+                    state.index[model.id].cancel()
+
+                attributes = change['new_val']
+                del attributes['id']
+
+                _apply_restrictions(attributes, cls.__get__, groups, [ ], [ ], model_data, token_id)
+
+                if attributes:
+                    model.update(attributes)
+                    await state.socket.send(json.dumps({
+                        'action': 'change',
+                        'id': model.id,
+                        'type': model._table,
+                        'data': {
+                            'attributes': attributes
+                        }
+                    }))
+
+        router = Router(methods=[ 'authenticate', 'deauthenticate', 'watch', 'unwatch' ])
+
+        @router.authenticate(f'/{cls._table}')
+        async def authenticate(state, doc):
+            try:
+                state.token = jwt.decode(doc.data.attributes.token, WebToken.get_secret(),
+                    algorithms=[WebToken.get_algolithm()],
+                    options=WebToken.get_options()
+                )
+            except jwt.ExpiredSignatureError:
+                error = Error(
+                    title = 'Invalid Token Error',
+                    detail = 'The token has expired.',
+                    status = 403
+                )
+                await state.socket.send(json.dumps({
+                    'errors': [ error.serialize() ]
+                }))
+            except jwt.ImmatureSignatureError:
+                error = Error(
+                    title = 'Invalid Token Error',
+                    detail = 'The token is not yet valid.',
+                    status = 403
+                )
+                await state.socket.send(json.dumps({
+                    'errors': [ error.serialize() ]
+                }))
+            except Exception as e:
+                error = Error(
+                    title = 'Invalid Authorization Header',
+                    detail = str(e),
+                    status = 403
+                )
+                await state.socket.send(json.dumps({
+                    'errors': [ error.serialize() ]
+                }))
+            else:
+                await state.socket.send(json.dumps({
+                    'action': 'authorized'
+                }))
+
+        @router.deauthenticate(f'/{cls._table})
+        async def deauthenticate(state, doc):
+            for id in state.index:
+                state.index[id].cancel()
+                del state.index[id]
+            state.token = None
+
+        @router.watch(f'/{cls._table}/<id>')
+        async def watch(state, doc, id):
+            if await cls.exists(id):
+                model = cls({ 'id': id })
+                await model.load()
+                state.index[id] = asyncio.create_task(watch_changes(state, model))
+
+        @router.unwatch(f'/{cls._table}/<id>')
+        async def unwatch(state, doc, id):
+            if id in state.index:
+                state.index[id].cancel()
+                del state.index[id]
+
+        async def socket_reader(state):
+            while True:
+                try:
+                    data = json.loads(await socket.recv())
+                except json.JSONDecodeError as e:
+                    logger.info(str(e), exc_info=True)
+                    continue
+                except ConnectionClosedError as e:
+                    logger.info(str(e))
+                    break
+
+                doc = Document(data)
+
+                await router.emit(doc.action, doc.path, state, doc)
+
+        await asyncio.gather(socket_reader(state))
