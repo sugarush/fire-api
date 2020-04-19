@@ -6,7 +6,7 @@ from . webtoken import WebToken
 
 async def authenticate(state, doc):
     try:
-        state.token = jwt.decode(doc.data.attributes.token, WebToken.get_secret(),
+        state.token = jwt.decode(doc.token, WebToken.get_secret(),
             algorithms=[WebToken.get_algolithm()],
             options=WebToken.get_options()
         )
