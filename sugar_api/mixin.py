@@ -53,7 +53,7 @@ class JSONAPIMixin(object):
         data['id'] = self.id
         data['attributes'] = self.serialize()
 
-        del data['attributes']['_id']
+        del data['attributes'][self._primary]
 
         return data
 
