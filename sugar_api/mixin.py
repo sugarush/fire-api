@@ -797,7 +797,7 @@ class JSONAPIMixin(object):
 
                 if len(components) == 5:
                     action, type, id, uuid, expire = components
-                if len(components) == 4:
+                elif len(components) == 4:
                     action, type, id, uuid = components
                 elif len(components) == 2:
                     action, id = components
