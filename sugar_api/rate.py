@@ -61,7 +61,7 @@ def socketrate(limit, interval, namespace=None):
     def wrapper(handler):
         async def decorator(state, doc, *args, **kargs):
             if interval is 'none':
-                return await handler(request, *args, **kargs)
+                return await handler(state, doc, *args, **kargs)
 
             data = (state.token or { }).get('data', { })
             id = data.get('id')
