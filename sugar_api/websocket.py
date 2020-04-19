@@ -2,6 +2,7 @@ import jwt
 import json
 
 from . acl import _check_acl
+from . webtoken import WebToken
 
 async def authenticate(state, doc):
     try:
