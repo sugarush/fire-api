@@ -5,6 +5,15 @@ Sugar API can be installed with `pip`:
 
 ``pip install git+https://github.com/sugarush/sugar-api@master``
 
+.. attention::
+  You must currently uninstall the `ujson` module after installing
+  **sugar_api** due to compatibility. It is a dependency of `sanic`, not
+  **sugar_api**. This will be fixed in the future.
+
+To uninstall `ujson` with `pip`:
+
+``pip uninstall ujson``
+
 Examples
 ========
 
