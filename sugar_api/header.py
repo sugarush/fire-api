@@ -8,6 +8,10 @@ __content_type__ = 'application/vnd.api+json'
 
 def jsonapi(*args, **kargs):
     '''
+    Returns a Sanic JSON response with the Access-Control-Allow-Origin
+    and Content-Type headers set.
+
+    :return: Returns a Sanic JSON response.
     '''
     headers = kargs.get('headers', { })
     headers.update({
@@ -21,6 +25,8 @@ def jsonapi(*args, **kargs):
 
 def content_type(handler):
     '''
+    Verify that the client's request has a Content-Type header
+    of `applicantion/vnd.api+json`.
     '''
     async def decorator(request, *args, **kargs):
         content_type = request.headers.get('Content-Type')
@@ -39,6 +45,8 @@ def content_type(handler):
 
 def accept(handler):
     '''
+    Verify that the client's request has a Accept header
+    of `applicantion/vnd.api+json`.
     '''
     async def decorator(request, *args, **kargs):
         accept = request.headers.get('Accept')

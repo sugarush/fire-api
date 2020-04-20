@@ -10,8 +10,10 @@ Welcome to Sugar API's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   content/basics
    content/classes
    content/decorators
+   content/functions
 
 
 Indices and tables

@@ -5,6 +5,15 @@ from . redis import Redis
 
 async def acquire(id, uuid, Model, expire=5, delay=1, attempts=5):
     '''
+    Attempt to acquire a document's lock.
+
+    :param id: The document id to attempt to lock.
+    :param uuid: The uuid to place in the lock to verify ownership.
+    :param Model: Used to verify that a document with `id` exists.
+    :param expire: Specifies how long the lock will be held by the server if not released.
+    :param delay: How long to wait between lock acquisition attempts.
+    :param attempts: The number of times to attempt to acquire the lock, can be negative.
+    :return: A boolean value.
     '''
     if not await Model.exists(id):
         return False
@@ -29,6 +38,12 @@ async def acquire(id, uuid, Model, expire=5, delay=1, attempts=5):
 
 async def release(id, uuid, Model):
     '''
+    Attempt to release a document's lock.
+
+    :param id: The document id to attempt to lock.
+    :param uuid: The uuid to place in the lock to verify ownership.
+    :param Model: Used to verify that a document with `id` exists.
+    :return: A boolean value.
     '''
     if not await Model.exists(id):
         return False

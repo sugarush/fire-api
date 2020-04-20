@@ -8,6 +8,12 @@ from . error import Error
 
 
 def objectid(key):
+    '''
+    Looks in the requests `\*\*kargs` for `key`. If found, `key` must
+    be a valid UUID or ObjectID.
+
+    :param key: The key to look in `\*\*kargs` for.
+    '''
     def wrapper(handler):
         async def decorator(request, *args, **kargs):
             id = kargs.get(key)

@@ -7,7 +7,11 @@ from . error import Error
 def acl(action, acl, Model=None):
     '''
     Verifies that `action` can be performed by the user according to
-    the provided `acl` and `Model`. For HTTP requests.
+    the provided `ACL` and `Model`. For HTTP requests.
+
+    :param action: The action to verify.
+    :param acl: The ACL to check against.
+    :param Model: The Model to apply the ACL to.
     '''
     def wrapper(handler):
         async def decorator(request, *args, **kargs):
@@ -28,6 +32,10 @@ def socketacl(action, acl, Model=None):
     '''
     Verifies that `action` can be performed by the user according to
     the provided `acl` and `Model`. For WebSocket requests.
+
+    :param action: The action to verify.
+    :param acl: The ACL to check against.
+    :param Model: The Model to apply the ACL to.
     '''
     def wrapper(handler):
         async def decorator(state, doc, *args, **kargs):
