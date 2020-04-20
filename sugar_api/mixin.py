@@ -475,11 +475,6 @@ class JSONAPIMixin(object):
                 if limit > 1000:
                     limit = 1000
 
-                count = 0
-
-                async for model in cls.find(query):
-                    count += 1
-
                 async for model in cls.find(query,
                     sort=sort,
                     skip=offset,
@@ -514,7 +509,6 @@ class JSONAPIMixin(object):
                 'meta': {
                     'offset': offset,
                     'limit': limit,
-                    'total': count
                 }
             }
 
