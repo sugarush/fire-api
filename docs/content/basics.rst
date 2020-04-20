@@ -17,6 +17,18 @@ To uninstall `ujson` with `pip`:
 Examples
 ========
 
+Respond with allowed methods:
+
+.. code-block:: python
+
+  from sugar_api import preflight
+  
+  from server import server
+
+  @server.options('/v1/endpoint')
+  async def endpoint(request):
+    return preflight(methods=['GET','POST'])
+
 To mount a REST resource into a Sanic server:
 
 .. code-block:: python
