@@ -1,4 +1,5 @@
 from uuid import uuid4
+from abc import ABC, abstractmethod
 
 import jwt
 from sanic import Blueprint
@@ -8,7 +9,6 @@ from . header import content_type, accept, jsonapi
 from . preflight import preflight
 from . validate import validate
 
-
 __secret__ = str(uuid4())
 __algorithm__ = 'HS256'
 __options__ = {
@@ -16,8 +16,13 @@ __options__ = {
     'verify_nbf': True
 }
 
-
 def webtoken(handler):
+
+    '''
+    Decode the webtoken, if provided, and inject it into
+    the request chain's `\*\*kargs` as `token`.
+    '''
+
     async def decorator(request, *args, **kargs):
         authorization = request.headers.get('Authorization')
         if authorization:
@@ -70,51 +75,65 @@ def webtoken(handler):
     return decorator
 
 
-class WebToken(object):
+class WebToken(ABC):
+
+    '''
+    A base class to be inherited from when implementing a WebToken
+    based authentication method.
+    '''
 
     @classmethod
+    @abstractmethod
     async def create(cls, attributes):
-        raise NotImplementedError('WebToken.payload not implemented.')
+        '''
+        Implement to handle token creation in response to a PUT request.
+        '''
+        pass
 
     @classmethod
+    @abstractmethod
     async def refresh(cls, attributes, token):
-        raise NotImplementedError('WebToken.refresh not implemented.')
+        '''
+        Implement to handle token refresh in response to a PATCH request.
+        '''
+        pass
 
     @classmethod
     def set_secret(cls, secret):
+        '''
+        Set the shared WebToken secret.
+        '''
         global __secret__
         __secret__ = secret
 
     @classmethod
     def set_algorithm(cls, algorithm):
+        '''
+        Set the shared WebToken algorithm.
+        '''
         global __algorithm__
         __algorithm__ = algorithm
 
     @classmethod
     def get_secret(cls):
+        '''
+        Get the shared WebToken secret.
+        '''
         return __secret__
 
     @classmethod
     def get_algolithm(cls):
+        '''
+        Get the shared WebToken algorithm.
+        '''
         return __algorithm__
 
     @classmethod
     def get_options(cls):
+        '''
+        Get the shared WebToken options.
+        '''
         return __options__
-
-    @classmethod
-    def set_signature(cls, value):
-        global __options__
-        if not isinstance(value, bool):
-            raise ValueError('Value is not bool.')
-        __options__['verify_signature'] = value
-
-    @classmethod
-    def set_expiration(cls, value):
-        global __options__
-        if not isinstance(value, bool):
-            raise ValueError('Value is not bool.')
-        __options__['verify_exp'] = value
 
     @classmethod
     def resource(cls, *args, **kargs):

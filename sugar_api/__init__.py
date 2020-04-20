@@ -1,3 +1,7 @@
+'''
+This is a docstring.
+'''
+
 from . acl import acl, socketacl
 from . cors import CORS
 from . error import Error

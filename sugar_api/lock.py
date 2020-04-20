@@ -4,6 +4,8 @@ from . redis import Redis
 
 
 async def acquire(id, uuid, Model, expire=5, delay=1, attempts=5):
+    '''
+    '''
     if not await Model.exists(id):
         return False
     conn = await Redis.connect(lowlevel=True)
@@ -26,6 +28,8 @@ async def acquire(id, uuid, Model, expire=5, delay=1, attempts=5):
     return False
 
 async def release(id, uuid, Model):
+    '''
+    '''
     if not await Model.exists(id):
         return False
     redis = await Redis.connect()

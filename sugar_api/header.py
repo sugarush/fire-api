@@ -7,6 +7,8 @@ from . error import Error
 __content_type__ = 'application/vnd.api+json'
 
 def jsonapi(*args, **kargs):
+    '''
+    '''
     headers = kargs.get('headers', { })
     headers.update({
         'Access-Control-Allow-Origin': CORS.get_origins(),
@@ -18,6 +20,8 @@ def jsonapi(*args, **kargs):
     return json(*args, **kargs)
 
 def content_type(handler):
+    '''
+    '''
     async def decorator(request, *args, **kargs):
         content_type = request.headers.get('Content-Type')
         if not content_type or not content_type == __content_type__:
@@ -34,6 +38,8 @@ def content_type(handler):
     return decorator
 
 def accept(handler):
+    '''
+    '''
     async def decorator(request, *args, **kargs):
         accept = request.headers.get('Accept')
         if not accept or not accept == __content_type__:

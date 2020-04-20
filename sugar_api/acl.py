@@ -5,6 +5,10 @@ from . error import Error
 
 
 def acl(action, acl, Model=None):
+    '''
+    Verifies that `action` can be performed by the user according to
+    the provided `acl` and `Model`. For HTTP requests.
+    '''
     def wrapper(handler):
         async def decorator(request, *args, **kargs):
             token = kargs.get('token')
@@ -20,11 +24,15 @@ def acl(action, acl, Model=None):
         return decorator
     return wrapper
 
-def socketacl(action, Model):
+def socketacl(action, acl, Model=None):
+    '''
+    Verifies that `action` can be performed by the user according to
+    the provided `acl` and `Model`. For WebSocket requests.
+    '''
     def wrapper(handler):
         async def decorator(state, doc, *args, **kargs):
             id = kargs.get('id')
-            if not await _check_acl(action, Model.__acl__, state.token, id, Model):
+            if not await _check_acl(action, acl, state.token, id, Model):
                 await state.socket.send(json.dumps({
                     'action': 'acl-restricted'
                 }))

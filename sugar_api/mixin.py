@@ -30,7 +30,14 @@ from . webtoken import WebToken, webtoken
 
 class TimestampMixin(object):
 
+    '''
+    A mixin to manage timestamps.
+    '''
+
     def timestamp(self, value):
+        '''
+        Manage conversions to and from `datetime` objects.
+        '''
         if isinstance(value, str):
             if value.endswith('Z'):
                 value = value[:-1] # Remove the Z from the javascript timestamp
@@ -42,6 +49,10 @@ class TimestampMixin(object):
 
 
 class JSONAPIMixin(object):
+
+    '''
+    A mixin to add REST and realtime functionality to **sugar_odm** models.
+    '''
 
     __rate__ = (0, 'none')
     __acl__ = None
@@ -107,6 +118,10 @@ class JSONAPIMixin(object):
 
     @classmethod
     def resource(cls, *args, pubsub=False, changes=False, **kargs):
+        '''
+        Generate and return a Sanic blueprint containing CRUD and WebSocket
+        endpoints.
+        '''
 
         if not len(args) > 0:
             args = [ cls._table ]
@@ -707,7 +722,7 @@ class JSONAPIMixin(object):
 
         @router.subscribe(f'/{cls._table}/<id>')
         @exists(cls)
-        @socketacl('subscribe', cls)
+        @socketacl('subscribe', cls.__acl__, cls)
         @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         async def _subscribe(state, doc, id):
             if await cls.exists(id):
@@ -720,7 +735,7 @@ class JSONAPIMixin(object):
 
         @router.unsubscribe(f'/{cls._table}/<id>')
         @exists(cls)
-        @socketacl('subscribe', cls)
+        @socketacl('subscribe', cls.__acl__, cls)
         @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         async def _unsubscribe(state, doc, id):
             ids = list(state.index.keys())
@@ -734,7 +749,7 @@ class JSONAPIMixin(object):
 
         @router.acquire(f'/{cls._table}/<id>')
         @exists(cls)
-        @socketacl('acquire', cls)
+        @socketacl('acquire', cls.__acl__, cls)
         @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         async def _acquire(state, doc, id):
             expire = 5
@@ -754,7 +769,7 @@ class JSONAPIMixin(object):
 
         @router.release(f'/{cls._table}/<id>')
         @exists(cls)
-        @socketacl('acquire', cls)
+        @socketacl('acquire', cls.__acl__, cls)
         @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         async def _release(state, doc, id):
             if not await release(id, state.uuid, cls):
@@ -902,7 +917,7 @@ class JSONAPIMixin(object):
 
         @router.watch(f'/{cls._table}/<id>')
         @exists(cls)
-        @socketacl('watch', cls)
+        @socketacl('watch', cls.__acl__, cls)
         @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         async def _watch(state, doc, id):
             model = cls({ 'id': id })
@@ -911,7 +926,7 @@ class JSONAPIMixin(object):
 
         @router.unwatch(f'/{cls._table}/<id>')
         @exists(cls)
-        @socketacl('watch', cls)
+        @socketacl('watch', cls.__acl__, cls)
         @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         async def _unwatch(state, doc, id):
             if id in state.index:
