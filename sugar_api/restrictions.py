@@ -4,6 +4,19 @@ from . header import jsonapi
 from . error import Error
 
 def set(restrictions, Model=None):
+    '''
+    Apply `set` restrictions. The `data.attributes` field will be
+    filtered accordingly.
+
+    .. code-block:: python
+
+        @server.get('/v1/endpoint/<id>')
+        @webtoken
+        # only allow administrators to set `field`
+        @set({ 'field': ['administrator'] })
+        async def handler(request, id):
+            ...
+    '''
     def wrapper(handler):
         async def decorator(request, *args, **kargs):
             if not restrictions:

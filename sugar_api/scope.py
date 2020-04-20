@@ -1,33 +1,18 @@
 from . error import Error
 from . header import jsonapi
 
-def _check_scope(scope, token_scope, kargs):
-    for (key, value) in scope.items():
-        if isinstance(value, str) and value.startswith('$'):
-            _key = value.lstrip('$')
-            token_value = token_scope.get(key)
-            karg_value = kargs.get(_key)
-            if not token_value or not karg_value:
-                continue
-            if token_value == karg_value:
-                return True
-        elif isinstance(value, str) and value.startswith('#'):
-            _key = value.lstrip('#')
-            token_value = token_scope.get(key)
-            karg_value = kargs.get(_key)
-            if not token_value or not karg_value:
-                continue
-            if karg_value in token_value:
-                return True
-        else:
-            _value = token_scope.get(key)
-            if not _value:
-                continue
-            if _value == value:
-                return True
-    return False
-
 def scope(scope):
+    '''
+    Verify that the user's token contains the requested scope.
+
+    .. code-block:: python
+
+        @server.get('/v1/endpoint/<id>')
+        @webtoken
+        @scope({ 'endpoint': '$id' })
+        async def handler(request, id):
+            ...
+    '''
     def wrapper(handler):
         async def decorator(*args, **kargs):
 
@@ -72,3 +57,29 @@ def scope(scope):
             return await handler(*args, **kargs)
         return decorator
     return wrapper
+
+def _check_scope(scope, token_scope, kargs):
+    for (key, value) in scope.items():
+        if isinstance(value, str) and value.startswith('$'):
+            _key = value.lstrip('$')
+            token_value = token_scope.get(key)
+            karg_value = kargs.get(_key)
+            if not token_value or not karg_value:
+                continue
+            if token_value == karg_value:
+                return True
+        elif isinstance(value, str) and value.startswith('#'):
+            _key = value.lstrip('#')
+            token_value = token_scope.get(key)
+            karg_value = kargs.get(_key)
+            if not token_value or not karg_value:
+                continue
+            if karg_value in token_value:
+                return True
+        else:
+            _value = token_scope.get(key)
+            if not _value:
+                continue
+            if _value == value:
+                return True
+    return False

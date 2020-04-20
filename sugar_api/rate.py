@@ -16,6 +16,14 @@ __intervals__ = {
 
 
 def rate(limit, interval, namespace=None):
+    '''
+    Rate limit endpoint to `limit` requests per `interval`. If `nampescpace` is
+    provided, it will be used instead of the requests path.
+
+    :param limit: The number of requests to limit to.
+    :param interval: The interval over which `limit` is to be applied.
+    :param namespace: The namespace, defaults to the requests path.
+    '''
     if not interval in __intervals__:
         raise Exception(
             f'ratelimit: {interval} not in {list(__intervals__.keys())}'
@@ -54,6 +62,14 @@ def rate(limit, interval, namespace=None):
     return wrapper
 
 def socketrate(limit, interval, namespace=None):
+    '''
+    Rate limit endpoint to `limit` requests per `interval`. If `nampescpace` is
+    provided, it will be used instead of the requests path.
+
+    :param limit: The number of requests to limit to.
+    :param interval: The interval over which `limit` is to be applied.
+    :param namespace: The namespace, defaults to the requests path.
+    '''
     if not interval in __intervals__:
         raise Exception(
             f'ratelimit: {interval} not in {list(__intervals__.keys())}'

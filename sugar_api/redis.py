@@ -7,6 +7,9 @@ def serialize(dict):
 
 
 class Redis(object):
+    '''
+    The Redis connection cache.
+    '''
 
     connections = { }
     loop = None
@@ -17,18 +20,27 @@ class Redis(object):
 
     @classmethod
     def default_connection(cls, **kargs):
+        '''
+        Set the default Redis `host`, `minsize` and `maxsize`.
+        '''
         cls.default_host = kargs.get('host', 'redis://localhost')
         cls.default_minsize = kargs.get('minsize', 5)
         cls.default_maxsize = kargs.get('maxsize', 10)
 
     @classmethod
     async def set_event_loop(cls, loop):
+        '''
+        Set the Redis event loop.
+        '''
         cls.loop = loop
         await cls.close()
         cls.connections = { }
 
     @classmethod
     async def connect(cls, **kargs):
+        '''
+        Connect to Redis using `\*\*kargs`.
+        '''
         key = serialize(kargs)
 
         try:
@@ -67,6 +79,9 @@ class Redis(object):
 
     @classmethod
     async def close(cls):
+        '''
+        Close all existing Redis connections.
+        '''
         for connection in cls.connections:
             cls.connections[connection].close()
             await cls.connections[connection].wait_closed()
