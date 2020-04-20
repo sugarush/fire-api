@@ -4,14 +4,14 @@ from setuptools import setup
 
 setup(
     name='sugar-api',
-    version='0.0.1',
+    version='0.0.2',
     author='Paul Severance',
     author_email='paul.severance@gmail.com',
     url='https://github.com/sugarush/sugar-api',
     packages=[
         'sugar_api'
     ],
-    description='An asynchronous JSONAPI implementation based on Sanic.',
+    description='An asynchronous JSONAPI server components.',
     install_requires=[
         'sugar-document@git+https://github.com/sugarush/sugar-document@master',
         'sugar-router@git+https://github.com/sugarush/sugar-router@master',

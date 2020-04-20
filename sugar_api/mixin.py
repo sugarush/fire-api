@@ -729,7 +729,8 @@ class JSONAPIMixin(object):
         @socketacl('subscribe', cls)
         @socketrate(*(cls.__rate__ or [ 0, 'none' ]), namespace=cls._table)
         async def _unsubscribe(state, doc, id):
-            if id in state.index:
+            ids = list(state.index.keys())
+            if id in ids:
                 del state.index[id]
                 await state.socket.send(json.dumps({
                     'action': 'unsubscribed',

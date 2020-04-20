@@ -28,7 +28,8 @@ async def authenticate(state, doc):
         }))
 
 async def deauthenticate(state, doc):
-    for id in state.index:
+    ids = list(state.index.keys())
+    for id in ids:
         del state.index[id]
     state.token = None
     await state.socket.send(json.dumps({
