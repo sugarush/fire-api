@@ -17,12 +17,10 @@ __options__ = {
 }
 
 def webtoken(handler):
-
     '''
     Decode the webtoken, if provided, and inject it into
     the request chain's `\*\*kargs` as `token`.
     '''
-
     async def decorator(request, *args, **kargs):
         authorization = request.headers.get('Authorization')
         if authorization:

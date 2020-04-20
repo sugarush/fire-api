@@ -23,6 +23,13 @@ def rate(limit, interval, namespace=None):
     :param limit: The number of requests to limit to.
     :param interval: The interval over which `limit` is to be applied.
     :param namespace: The namespace, defaults to the requests path.
+
+    .. code-block:: python
+
+        @server.get('/v1/endpoint')
+        @rate(1, 'secondly')
+        async def handler(request):
+            ...
     '''
     if not interval in __intervals__:
         raise Exception(

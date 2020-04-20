@@ -5,6 +5,9 @@ from . acl import _check_acl
 from . webtoken import WebToken
 
 async def authenticate(state, doc):
+    '''
+    Authenticate a websocket connection.
+    '''
     try:
         state.token = jwt.decode(doc.token, WebToken.get_secret(),
             algorithms=[WebToken.get_algolithm()],
@@ -28,6 +31,9 @@ async def authenticate(state, doc):
         }))
 
 async def deauthenticate(state, doc):
+    '''
+    Deauthenticate a websocket connection.
+    '''
     ids = list(state.index.keys())
     for id in ids:
         del state.index[id]
@@ -37,11 +43,17 @@ async def deauthenticate(state, doc):
     }))
 
 async def status(state, doc):
+    '''
+    Trigger an `authenticated` or `deauthenticated` event.
+    '''
     await state.socket.send(json.dumps({
         'action': 'authenticated' if state.token else 'deauthenticated'
     }))
 
 def exists(Model):
+    '''
+    Verify that a document exists for `Model` for the `id` in the request's path.
+    '''
     def wrapper(handler):
         async def decorator(state, doc, *args, **kargs):
             id = kargs.get('id')

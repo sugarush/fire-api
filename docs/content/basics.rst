@@ -1,5 +1,14 @@
-Basics
-======
+Installation
+============
+
+Sugar API can be installed with `pip`:
+
+``pip install git+https://github.com/sugarush/sugar-api@master``
+
+Examples
+========
+
+To mount a REST resource into a Sanic server:
 
 .. code-block:: python
 
@@ -8,10 +17,12 @@ Basics
 
   from server import server
 
-  class Data(PostgresDBModel, JSONAPIMixin, TimestampMixin):
+  class DataModel(PostgresDBModel, JSONAPIMixin, TimestampMixin):
     field = Field(required=True)
 
-  server.blueprint(Data.resource(url_prefix='/v1'))
+  server.blueprint(DataModel.resource(url_prefix='/v1'))
+
+Add a `created` field to a **sugar_odm** model:
 
 .. code-block:: python
 
@@ -20,7 +31,7 @@ Basics
   from sugar_odm import PostgresDBModel, Field
   from sugar_api import JSONAPIMixin, TimestampMixin
 
-  class Data(PostgresDBModel, JSONAPIMixin, TimestampMixin):
+  class DataModel(PostgresDBModel, JSONAPIMixin, TimestampMixin):
     created = Field(
       type='timestamp',
       default=lambda: datetime.utcnow(),

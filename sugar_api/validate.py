@@ -2,6 +2,9 @@ from . error import Error
 from . header import jsonapi
 
 def validate(handler):
+    '''
+    Validate the structure of a JSONAPI request.
+    '''
     async def decorator(request, *args, **kargs):
 
         data = None
