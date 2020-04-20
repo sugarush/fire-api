@@ -135,6 +135,10 @@ class WebToken(ABC):
 
     @classmethod
     def resource(cls, *args, **kargs):
+        '''
+        Generate and return a Sanic blueprint containing token create and
+        refresh methods.
+        '''
 
         url = kargs.get('url', 'authentication').strip('/')
         url = '/{url}'.format(url=url)
