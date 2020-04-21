@@ -53,6 +53,25 @@ To mount a JSONAPI resource into a Sanic server:
 
 This exposes `/v1/data_models[/<id>]` as a JSONAPI resource.
 
+--------------------------------------------------------------------
+
+To mount a JSONAPI resource with pubsub functionality into a Sanic server:
+
+.. code-block:: python
+
+  from sugar_odm import PostgresDBModel, Field
+  from sugar_api import JSONAPIMixin
+
+  from server import server
+
+  class DataModel(PostgresDBModel, JSONAPIMixin):
+    field = Field(required=True)
+
+  server.blueprint(DataModel.resource(pubsub=True))
+
+This exposes `/data_models[/<id>]` as a JSONAPI resource as well as
+`/data_models/pubsub` as a websocket resource.
+
 ------------------------------------------------------------
 
 Add a `created` timestamp to a **sugar_odm** model:
