@@ -45,7 +45,7 @@ def content_type(handler):
 
 def accept(handler):
     '''
-    Verify that the client's request has a Accept header
+    Verify that the client's request has an Accept header
     of `applicantion/vnd.api+json`.
     '''
     async def decorator(request, *args, **kargs):

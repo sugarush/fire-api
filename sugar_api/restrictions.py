@@ -6,7 +6,7 @@ from . error import Error
 def set(restrictions, Model=None):
     '''
     Apply `set` restrictions to incomming attributes. :func:`sugar_api.validate`
-    should be applied before set.
+    should be applied before `set`.
 
     .. code-block:: python
 
