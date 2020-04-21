@@ -14,36 +14,42 @@ To uninstall `ujson` with `pip`:
 
 ``pip uninstall ujson``
 
-Examples
-========
+Usage
+=====
 
 Respond with allowed methods:
 
 .. code-block:: python
 
   from sugar_api import preflight
-  
+
   from server import server
 
   @server.options('/v1/endpoint')
   async def endpoint(request):
     return preflight(methods=['GET','POST'])
 
-To mount a REST resource into a Sanic server:
+------------------------------------------------
+
+To mount a JSONAPI resource into a Sanic server:
 
 .. code-block:: python
 
   from sugar_odm import PostgresDBModel, Field
-  from sugar_api import JSONAPIMixin, TimestampMixin
+  from sugar_api import JSONAPIMixin
 
   from server import server
 
-  class DataModel(PostgresDBModel, JSONAPIMixin, TimestampMixin):
+  class DataModel(PostgresDBModel, JSONAPIMixin):
     field = Field(required=True)
 
   server.blueprint(DataModel.resource(url_prefix='/v1'))
 
-Add a `created` field to a **sugar_odm** model:
+This exposes `/v1/data_models[/<id>]` as a JSONAPI resource.
+
+------------------------------------------------------------
+
+Add a `created` timestamp to a **sugar_odm** model:
 
 .. code-block:: python
 

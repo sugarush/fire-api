@@ -41,7 +41,7 @@ async def release(id, uuid, Model):
     Attempt to release a document's lock.
 
     :param id: The document id to attempt to lock.
-    :param uuid: The uuid to place in the lock to verify ownership.
+    :param uuid: The uuid to verify ownership with.
     :param Model: Used to verify that a document with `id` exists.
     :return: A boolean value.
     '''
