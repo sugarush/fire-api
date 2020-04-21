@@ -1,19 +1,16 @@
 Decorators
 ==========
 
-.. autofunction:: sugar_api.accept
-.. autofunction:: sugar_api.acl
-.. autofunction:: sugar_api.authenticate
-.. autofunction:: sugar_api.deauthenticate
-.. autofunction:: sugar_api.content_type
-.. autofunction:: sugar_api.exists
-.. autofunction:: sugar_api.objectid
-.. autofunction:: sugar_api.publish
-.. autofunction:: sugar_api.rate
-.. autofunction:: sugar_api.scope
-.. autofunction:: sugar_api.set
-.. autofunction:: sugar_api.socketacl
-.. autofunction:: sugar_api.socketrate
-.. autofunction:: sugar_api.status
-.. autofunction:: sugar_api.validate
-.. autofunction:: sugar_api.webtoken
+.. autodecorator:: sugar_api.accept
+.. autodecorator:: sugar_api.acl
+.. autodecorator:: sugar_api.content_type
+.. autodecorator:: sugar_api.exists
+.. autodecorator:: sugar_api.objectid
+.. autodecorator:: sugar_api.publish
+.. autodecorator:: sugar_api.rate
+.. autodecorator:: sugar_api.scope
+.. autodecorator:: sugar_api.set
+.. autodecorator:: sugar_api.socketacl
+.. autodecorator:: sugar_api.socketrate
+.. autodecorator:: sugar_api.validate
+.. autodecorator:: sugar_api.webtoken

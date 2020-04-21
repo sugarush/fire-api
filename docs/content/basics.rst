@@ -1,3 +1,9 @@
+About
+=====
+
+Sugar API is a Python3.7+ module that provides a variety of tools for creating
+Sanic based APIs as well as a JSONAPI mixin for Sugar ODM models.
+
 Installation
 ============
 
