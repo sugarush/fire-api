@@ -1,11 +1,12 @@
 About
 =====
 
-Sugar API is a Python3.7+ module that provides a variety of tools for creating
-Sanic based APIs as well as a JSONAPI mixin for Sugar ODM models.
+Sugar API python module that provides a variety of tools for creating
+**Sanic** based APIs as well as a JSONAPI mixin for
+`Sugar ODM <https://sugar-odm.docs.sugarush.io>`_ models.
 
 Installation
-============
+------------
 
 Sugar API can be installed with `pip`:
 
@@ -21,7 +22,7 @@ To uninstall `ujson` with `pip`:
 ``pip uninstall ujson``
 
 Usage
-=====
+-----
 
 Respond with allowed methods:
 
